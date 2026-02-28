@@ -1,0 +1,15 @@
+services:
+  discovery:
+    build: .
+    env_file:
+      - .env
+    volumes:
+      - ./projects:/app/projects
+      - ./knowledge_base:/app/knowledge_base
+    entrypoint: [ "product-discovery" ]
+    command: [ "--help" ]
+  # Example: run discovery
+  # docker compose run discovery "SaaS for freelance UX designers" --project ux-tool
+
+  # Example: check installation
+  # docker compose run discovery --check

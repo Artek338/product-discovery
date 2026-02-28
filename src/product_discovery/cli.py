@@ -2,9 +2,11 @@
 Product Discovery CLI — AI-powered product/service discovery toolkit.
 
 Usage:
-    python -m product_discovery.cli "Your product idea" --project my-idea
     product-discovery "Your product idea" --project my-idea
-    product-discovery --check  # Verify installation
+    product-discovery --resume my-idea          # Resume interrupted session
+    product-discovery --status my-idea          # Show session progress
+    product-discovery generate-prd --project X  # Generate PRD from discovery results
+    product-discovery --check                   # Verify installation
 """
 
 import argparse
@@ -45,6 +47,11 @@ def check_imports() -> bool:
         from product_discovery.workflows.discovery_state import DiscoveryState
     except ImportError as e:
         problems.append(f"Discovery state: {e}")
+
+    try:
+        from product_discovery.workflows.session import SessionManager
+    except ImportError as e:
+        problems.append(f"Session manager: {e}")
 
     if problems:
         print("❌ Import check FAILED:")
@@ -145,14 +152,101 @@ async def run_discovery_workflow(
     print(f"\n📄 Report saved to: {output_file}")
 
 
+def show_status(project_name: str, output_dir: str = "projects") -> None:
+    """Show session progress for a project."""
+    from product_discovery.workflows.session import SessionManager
+    mgr = SessionManager(project_name, output_dir=output_dir)
+    print(mgr.get_progress_summary())
+
+
+async def generate_prd(project_name: str, output_dir: str = "projects") -> None:
+    """Generate PRD from discovery results."""
+    project_path = Path(output_dir) / project_name
+
+    # Find latest discovery report
+    reports = sorted(project_path.glob("DISCOVERY_*.md"), reverse=True)
+    if not reports:
+        print(f"❌ No discovery report found in {project_path}/")
+        print("   Run discovery first: product-discovery 'idea' --project " + project_name)
+        sys.exit(1)
+
+    latest_report = reports[0]
+    discovery_content = latest_report.read_text(encoding="utf-8")
+    print(f"📋 Using discovery report: {latest_report.name}")
+
+    # Load PRD template
+    template_path = Path(__file__).parent.parent.parent / "templates" / "PRD.template.md"
+    if template_path.exists():
+        template = template_path.read_text(encoding="utf-8")
+    else:
+        template = "# PRD: [Product Name]\n\n[Standard PRD format]"
+
+    # Use PM agent to generate PRD
+    from product_discovery.agents.product_manager.agent import pm_agent
+
+    prompt = f"""
+Na podstawie poniższych wyników Discovery, wypełnij szablon PRD.
+
+## Wyniki Discovery:
+{discovery_content}
+
+## Szablon PRD (wypełnij WSZYSTKIE sekcje):
+{template}
+
+ZASADY:
+1. Wypełnij sekcje 1-5 na podstawie danych z Discovery
+2. Evidence z Discovery wstaw do sekcji 2.3
+3. Competing solutions → tabela w sekcji 7.2
+4. JTBD analysis → User Stories w sekcji 4
+5. Nie zostawiaj placeholder'ów [brackets] — wypełnij konkretnymi danymi
+6. Sekcje 6-8 (Business Model, Market, GTM) — wypełnij na podstawie competitive report
+7. Sekcje 9-15 — wypełnij sensownie lub oznacz jako "TBD: requires further validation"
+"""
+
+    result = await pm_agent.run(prompt)
+
+    prd_file = project_path / "PRD.md"
+    # pm_agent returns ProductManagerResult, extract useful content
+    prd_content = f"""# PRD: {project_name}
+
+**Generated from:** {latest_report.name}
+**Date:** {datetime.now().strftime('%Y-%m-%d %H:%M')}
+**Status:** Draft (auto-generated from Discovery)
+
+---
+
+{str(result.output)}
+"""
+
+    prd_file.write_text(prd_content, encoding="utf-8")
+    print(f"\n✅ PRD generated: {prd_file}")
+    print(f"   ⚠️  Review and edit before sharing — some sections may need human input.")
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
         prog="product-discovery",
         description="🔍 Product Discovery — AI-powered product/service discovery toolkit",
-        epilog="Example: product-discovery 'SaaS for freelance designers' --project design-tool",
+        epilog=(
+            "Examples:\n"
+            "  product-discovery 'SaaS for freelance designers' --project design-tool\n"
+            "  product-discovery --resume design-tool\n"
+            "  product-discovery --status design-tool\n"
+            "  product-discovery generate-prd --project design-tool"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
+    # Subcommands
+    subparsers = parser.add_subparsers(dest="command", help="Available commands")
+
+    # generate-prd subcommand
+    prd_parser = subparsers.add_parser("generate-prd", help="Generate PRD from discovery results")
+    prd_parser.add_argument("--project", "-p", required=True, help="Project name")
+    prd_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+
+    # Main arguments
     parser.add_argument(
         "idea",
         nargs="?",
@@ -173,6 +267,16 @@ def main():
         help="Output directory (default: projects/)",
     )
     parser.add_argument(
+        "--resume", "-r",
+        metavar="PROJECT",
+        help="Resume an interrupted discovery session",
+    )
+    parser.add_argument(
+        "--status", "-s",
+        metavar="PROJECT",
+        help="Show progress of a discovery session",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Check imports and environment, then exit",
@@ -180,7 +284,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.1.0",
+        version="%(prog)s 0.2.0",
     )
 
     args = parser.parse_args()
@@ -188,10 +292,35 @@ def main():
     # Load .env
     load_dotenv()
 
+    # Handle subcommands
+    if args.command == "generate-prd":
+        if not check_environment():
+            sys.exit(1)
+        asyncio.run(generate_prd(args.project, args.output))
+        return
+
     if args.check:
         ok = check_imports()
         ok = check_environment() and ok
         sys.exit(0 if ok else 1)
+
+    if args.status:
+        show_status(args.status, args.output)
+        return
+
+    if args.resume:
+        from product_discovery.workflows.session import SessionManager
+        mgr = SessionManager(args.resume, output_dir=args.output)
+        if not mgr.has_checkpoint():
+            print(f"❌ No checkpoint found for project '{args.resume}'")
+            sys.exit(1)
+        print(mgr.get_progress_summary())
+        print("\n🔄 Resuming session...\n")
+        state, resume_node = mgr.load_checkpoint()
+        # TODO: Implement graph resume from specific node
+        print(f"   Would resume from: {resume_node}")
+        print("   ⚠️  Full resume not yet implemented — re-run with full idea description")
+        return
 
     if not args.idea:
         parser.print_help()
