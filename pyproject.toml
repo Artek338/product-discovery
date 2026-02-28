@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "product-discovery"
+version = "0.1.0"
+description = "Complete product/service discovery toolkit — AI-powered JTBD analysis, synthetic interviews, competitive research, and evidence-based GO/NO-GO decisions."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Artek338", url = "https://github.com/Artek338"},
+]
+keywords = ["product-discovery", "jtbd", "product-management", "ai", "interviews", "competitive-analysis"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+]
+dependencies = [
+    "pydantic-ai>=0.0.30",
+    "pydantic-graph>=0.0.30",
+    "pydantic>=2.0.0",
+    "anthropic>=0.47.0",
+    "python-dotenv>=1.0.0",
+    "pyyaml>=6.0",
+    "duckduckgo-search>=4.0.0",
+    "trafilatura>=1.6.0",
+    "requests>=2.31.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+    "ruff>=0.4.0",
+]
+research = [
+    "exa_py>=1.0.0",
+]
+
+[project.scripts]
+product-discovery = "product_discovery.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/Artek338/product-discovery"
+Repository = "https://github.com/Artek338/product-discovery"
+Issues = "https://github.com/Artek338/product-discovery/issues"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
