@@ -1,0 +1,46 @@
+# Product Discovery — English strings
+report:
+  title: "Discovery Report"
+  verdict: "Verdict"
+  confidence: "Confidence"
+  evidence_level: "Evidence Level"
+  duration: "Duration"
+  roi: "Return on Investment"
+  jtbd_analysis: "JTBD Analysis"
+  functional_job: "Functional Job"
+  emotional_job: "Emotional Job"
+  social_job: "Social Job"
+  competing_solutions: "Competing Solutions"
+  competitive_analysis: "Competitive Analysis"
+  forces_diagram: "Forces Diagram"
+  assumption_map: "Assumption Map"
+  synthetic_users: "Synthetic Users"
+  scorecard: "Value Scorecard"
+
+assumptions:
+  types:
+    desirability: "Desirability"
+    viability: "Viability"
+    feasibility: "Feasibility"
+    usability: "Usability"
+    ethical: "Ethical"
+  statuses:
+    untested: "Untested"
+    testing: "Testing"
+    validated: "Validated"
+    invalidated: "Invalidated"
+
+interview:
+  importing: "Importing interview"
+  insights_found: "Insights found"
+  saturation_score: "Saturation Score"
+  quality: "Response quality"
+  genuine: "Genuine"
+  polite_lie: "Polite lie"
+  vague: "Vague/speculative"
+
+cli:
+  check_ok: "All imports OK"
+  check_fail: "Import check FAILED"
+  no_checkpoint: "No checkpoint for project"
+  resuming: "Resuming session..."

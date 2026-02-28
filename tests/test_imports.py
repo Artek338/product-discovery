@@ -6,7 +6,7 @@ import pytest
 def test_import_package():
     """Top-level package imports correctly."""
     import product_discovery
-    assert product_discovery.__version__ == "0.2.0"
+    assert product_discovery.__version__ == "0.3.0"
 
 
 def test_import_business_analyst_schemas():

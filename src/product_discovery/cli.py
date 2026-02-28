@@ -1,12 +1,16 @@
-"""
+﻿"""
 Product Discovery CLI — AI-powered product/service discovery toolkit.
 
 Usage:
     product-discovery "Your product idea" --project my-idea
-    product-discovery --resume my-idea          # Resume interrupted session
-    product-discovery --status my-idea          # Show session progress
-    product-discovery generate-prd --project X  # Generate PRD from discovery results
-    product-discovery --check                   # Verify installation
+    product-discovery --resume my-idea              # Resume interrupted session
+    product-discovery --status my-idea              # Show session progress
+    product-discovery generate-prd --project X      # Generate PRD from discovery results
+    product-discovery import-interviews --project X --dir ./transcripts/
+    product-discovery export-report --project X     # Generate HTML report
+    product-discovery export-miro --project X       # Push to Miro board
+    product-discovery assumptions list --project X  # List assumptions
+    product-discovery --check                       # Verify installation
 """
 
 import argparse
@@ -77,6 +81,8 @@ def check_environment() -> bool:
         "PERPLEXITY_API_KEY": "Enhanced competitive research",
         "SERPER_API_KEY": "Google Search results",
         "EXA_API_KEY": "Neural semantic search",
+        "MIRO_ACCESS_TOKEN": "Miro board export",
+        "MIRO_BOARD_ID": "Miro board ID",
     }
     for key, desc in optional_keys.items():
         if os.getenv(key):
@@ -206,7 +212,6 @@ ZASADY:
     result = await pm_agent.run(prompt)
 
     prd_file = project_path / "PRD.md"
-    # pm_agent returns ProductManagerResult, extract useful content
     prd_content = f"""# PRD: {project_name}
 
 **Generated from:** {latest_report.name}
@@ -223,6 +228,237 @@ ZASADY:
     print(f"   ⚠️  Review and edit before sharing — some sections may need human input.")
 
 
+# ---- New Phase 2 commands ----
+
+def cmd_import_interviews(args) -> None:
+    """Import real interview transcripts."""
+    from product_discovery.tools.interview_import import import_interviews
+
+    files = []
+    if args.file:
+        files = [Path(args.file)]
+    elif args.dir:
+        dir_path = Path(args.dir)
+        if not dir_path.exists():
+            print(f"❌ Directory not found: {dir_path}")
+            sys.exit(1)
+        files = sorted(dir_path.glob("*.md")) + sorted(dir_path.glob("*.txt"))
+        if not files:
+            print(f"❌ No .md or .txt files found in {dir_path}")
+            sys.exit(1)
+    else:
+        print("❌ Specify --file or --dir")
+        sys.exit(1)
+
+    print(f"📂 Importing {len(files)} interview(s) for project '{args.project}'...")
+    print()
+    import_interviews(args.project, files, args.output)
+
+
+def cmd_export_report(args) -> None:
+    """Generate HTML report from discovery/interview data."""
+    from product_discovery.visualizations.report_html import generate_html_report
+
+    # Collect available data
+    discovery_data = _load_project_data(args.project, args.output)
+
+    if not discovery_data:
+        print(f"❌ No data found for project '{args.project}' in {args.output}/")
+        sys.exit(1)
+
+    out_file = generate_html_report(
+        project_name=args.project,
+        discovery_data=discovery_data,
+        output_dir=args.output,
+        theme=args.theme,
+    )
+    print(f"\n✅ HTML report generated: {out_file}")
+
+    if args.open:
+        import webbrowser
+        webbrowser.open(str(out_file.resolve()))
+
+
+def cmd_assumptions(args) -> None:
+    """Manage assumption board."""
+    from product_discovery.tools.assumption_tracker import AssumptionBoard
+
+    board = AssumptionBoard.load(args.project, args.output)
+
+    if args.action == "list":
+        if not board.assumptions:
+            print(f"📋 No assumptions yet for '{args.project}'. Use 'assumptions add' to start.")
+            return
+        print(board.summary_table())
+
+    elif args.action == "add":
+        if not args.hypothesis:
+            print("❌ --hypothesis required for 'add'")
+            sys.exit(1)
+        a = board.add(
+            hypothesis=args.hypothesis,
+            assumption_type=args.type or "desirability",
+            risk=args.risk or 5,
+            uncertainty=args.uncertainty or 5,
+        )
+        board.save(args.output)
+        print(f"✅ Added {a.id}: {a.hypothesis} (type={a.type.value}, R×U={a.priority_score})")
+
+    elif args.action == "update":
+        if not args.id:
+            print("❌ --id required for 'update'")
+            sys.exit(1)
+        a = board.update_status(
+            args.id,
+            status=args.status or "testing",
+            result=args.result or "",
+            evidence_level=args.evidence_level or 0,
+        )
+        if a:
+            board.save(args.output)
+            print(f"✅ Updated {a.id}: status={a.status.value}")
+        else:
+            print(f"❌ Assumption '{args.id}' not found")
+
+    elif args.action == "prioritize":
+        top = board.prioritized[:10]
+        if not top:
+            print("📋 No untested assumptions to prioritize.")
+            return
+        print("🔥 Priority Queue (highest risk × uncertainty first):")
+        for a in top:
+            print(f"   {a.id}: [{a.type.value}] R{a.risk}×U{a.uncertainty}={a.priority_score} — {a.hypothesis[:50]}")
+
+    elif args.action == "stats":
+        stats = board.stats
+        print(f"📊 Assumption Board Stats: {args.project}")
+        print(f"   Total: {stats['total']}")
+        print(f"   By status: {stats['by_status']}")
+        print(f"   By type: {stats['by_type']}")
+        print(f"   Invalidation rate: {stats['invalidation_rate']} (benchmark: 30-60%)")
+
+
+def cmd_export_miro(args) -> None:
+    """Export discovery data to Miro board."""
+    token = os.getenv("MIRO_ACCESS_TOKEN") or args.token
+    board_id = os.getenv("MIRO_BOARD_ID") or args.board_id
+
+    if not token or not board_id:
+        print("❌ MIRO_ACCESS_TOKEN and MIRO_BOARD_ID required.")
+        print("   Set in .env or pass --token and --board-id")
+        sys.exit(1)
+
+    try:
+        from product_discovery.integrations.miro_export import export_to_miro
+    except ImportError:
+        print("❌ Miro integration not available. Check installation.")
+        sys.exit(1)
+
+    data = _load_project_data(args.project, args.output)
+    if not data:
+        print(f"❌ No data found for project '{args.project}'")
+        sys.exit(1)
+
+    export_to_miro(
+        board_id=board_id,
+        access_token=token,
+        project_name=args.project,
+        discovery_data=data,
+        sections=args.sections.split(",") if args.sections else ["all"],
+    )
+
+
+def _load_project_data(project_name: str, output_dir: str = "projects") -> dict:
+    """Load all available data for a project."""
+    import json
+    project_path = Path(output_dir) / project_name
+    data = {}
+
+    # Discovery report
+    reports = sorted(project_path.glob("DISCOVERY_*.md"), reverse=True)
+    if reports:
+        content = reports[0].read_text(encoding="utf-8")
+        data["has_discovery"] = True
+        # Extract basic fields from markdown
+        for line in content.split("\n"):
+            if line.startswith("**Verdict:**"):
+                data["verdict"] = line.split("**Verdict:**")[1].strip()
+            elif line.startswith("**Confidence:**"):
+                data["confidence"] = line.split("**Confidence:**")[1].strip().rstrip("%")
+            elif line.startswith("**Evidence Level:**"):
+                data["evidence_level"] = line.split("**Evidence Level:**")[1].strip()
+            elif line.startswith("**Functional Job:**"):
+                data["functional_job"] = line.split("**Functional Job:**")[1].strip()
+            elif line.startswith("**Emotional Job:**"):
+                data["emotional_job"] = line.split("**Emotional Job:**")[1].strip()
+            elif line.startswith("**Social Job:**"):
+                data["social_job"] = line.split("**Social Job:**")[1].strip()
+
+    # Interview corpus
+    corpus_file = project_path / "interview_corpus.json"
+    if corpus_file.exists():
+        corpus = json.loads(corpus_file.read_text(encoding="utf-8"))
+        data["interviews_count"] = corpus.get("total_interviews", 0)
+        data["saturation_scores"] = [
+            a.get("saturation_score", 1.0) for a in corpus.get("analyses", [])
+        ]
+
+    # Assumptions
+    assumptions_file = project_path / "assumptions.json"
+    if assumptions_file.exists():
+        assumptions = json.loads(assumptions_file.read_text(encoding="utf-8"))
+        data["assumptions_tested"] = sum(
+            1 for a in assumptions.get("assumptions", [])
+            if a.get("status") in ("validated", "invalidated")
+        )
+        data["assumptions_data"] = [
+            {
+                "id": a["id"],
+                "hypothesis": a["hypothesis"],
+                "type": a["type"],
+                "status": a["status"],
+                "risk": a.get("risk", 5),
+                "uncertainty": a.get("uncertainty", 5),
+                "priority": a.get("priority_score", 25),
+            }
+            for a in assumptions.get("assumptions", [])
+        ]
+
+    return data
+
+
+def cmd_export_gdocs(args) -> None:
+    """Export discovery data to Google Docs."""
+    import os as _os
+    sa_file = _os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE") or getattr(args, "service_account", None)
+
+    if not sa_file:
+        print("❌ GOOGLE_SERVICE_ACCOUNT_FILE required.")
+        print("   Set in .env or pass --service-account path/to/key.json")
+        sys.exit(1)
+
+    try:
+        from product_discovery.integrations.gdocs_export import export_to_gdocs
+    except ImportError:
+        print("❌ Google Docs dependencies not installed: pip install product-discovery[gdocs]")
+        sys.exit(1)
+
+    data = _load_project_data(args.project, args.output)
+    if not data:
+        print(f"❌ No data found for project '{args.project}'")
+        sys.exit(1)
+
+    share_emails = args.share_with.split(",") if getattr(args, "share_with", None) else None
+
+    export_to_gdocs(
+        project_name=args.project,
+        discovery_data=data,
+        service_account_file=sa_file,
+        share_with=share_emails,
+        template_id=getattr(args, "template_id", None),
+    )
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -233,7 +469,12 @@ def main():
             "  product-discovery 'SaaS for freelance designers' --project design-tool\n"
             "  product-discovery --resume design-tool\n"
             "  product-discovery --status design-tool\n"
-            "  product-discovery generate-prd --project design-tool"
+            "  product-discovery generate-prd --project design-tool\n"
+            "  product-discovery import-interviews --project X --dir ./transcripts/\n"
+            "  product-discovery export-report --project X --theme dark --open\n"
+            "  product-discovery assumptions add --project X --hypothesis 'Users want X'\n"
+            "  product-discovery export-miro --project X\n"
+            "  product-discovery export-gdocs --project X --share-with user@email.com"
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
@@ -245,6 +486,50 @@ def main():
     prd_parser = subparsers.add_parser("generate-prd", help="Generate PRD from discovery results")
     prd_parser.add_argument("--project", "-p", required=True, help="Project name")
     prd_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+
+    # import-interviews subcommand
+    imp_parser = subparsers.add_parser("import-interviews", help="Import real interview transcripts")
+    imp_parser.add_argument("--project", "-p", required=True, help="Project name")
+    imp_parser.add_argument("--file", "-f", help="Single interview file")
+    imp_parser.add_argument("--dir", "-d", help="Directory with interview files")
+    imp_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+
+    # export-report subcommand
+    rep_parser = subparsers.add_parser("export-report", help="Generate interactive HTML report")
+    rep_parser.add_argument("--project", "-p", required=True, help="Project name")
+    rep_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    rep_parser.add_argument("--theme", "-t", default="dark", choices=["dark", "light"], help="Theme")
+    rep_parser.add_argument("--open", action="store_true", help="Auto-open in browser")
+
+    # assumptions subcommand
+    asm_parser = subparsers.add_parser("assumptions", help="Manage assumption board")
+    asm_parser.add_argument("action", choices=["list", "add", "update", "prioritize", "stats"])
+    asm_parser.add_argument("--project", "-p", required=True, help="Project name")
+    asm_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    asm_parser.add_argument("--hypothesis", help="Assumption hypothesis text")
+    asm_parser.add_argument("--type", choices=["desirability", "viability", "feasibility", "usability", "ethical"])
+    asm_parser.add_argument("--risk", type=int, help="Risk score 1-10")
+    asm_parser.add_argument("--uncertainty", type=int, help="Uncertainty score 1-10")
+    asm_parser.add_argument("--id", help="Assumption ID (for update)")
+    asm_parser.add_argument("--status", choices=["untested", "testing", "validated", "invalidated"])
+    asm_parser.add_argument("--result", help="Test result description")
+    asm_parser.add_argument("--evidence-level", type=int, help="Evidence level 0-4")
+
+    # export-miro subcommand
+    miro_parser = subparsers.add_parser("export-miro", help="Export to Miro board")
+    miro_parser.add_argument("--project", "-p", required=True, help="Project name")
+    miro_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    miro_parser.add_argument("--token", help="Miro access token (or set MIRO_ACCESS_TOKEN)")
+    miro_parser.add_argument("--board-id", help="Miro board ID (or set MIRO_BOARD_ID)")
+    miro_parser.add_argument("--sections", help="Comma-separated: ost,forces,assumptions,all")
+
+    # export-gdocs subcommand
+    gdocs_parser = subparsers.add_parser("export-gdocs", help="Export to Google Docs")
+    gdocs_parser.add_argument("--project", "-p", required=True, help="Project name")
+    gdocs_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    gdocs_parser.add_argument("--service-account", help="Path to service account JSON (or GOOGLE_SERVICE_ACCOUNT_FILE)")
+    gdocs_parser.add_argument("--share-with", help="Comma-separated emails to share doc with")
+    gdocs_parser.add_argument("--template-id", help="Google Doc template ID to copy from")
 
     # Main arguments
     parser.add_argument(
@@ -277,6 +562,12 @@ def main():
         help="Show progress of a discovery session",
     )
     parser.add_argument(
+        "--lang",
+        default="pl",
+        choices=["pl", "en"],
+        help="Language for output (default: pl)",
+    )
+    parser.add_argument(
         "--check",
         action="store_true",
         help="Check imports and environment, then exit",
@@ -284,7 +575,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.2.0",
+        version="%(prog)s 0.3.0",
     )
 
     args = parser.parse_args()
@@ -292,11 +583,38 @@ def main():
     # Load .env
     load_dotenv()
 
+    # Set language
+    try:
+        from product_discovery.i18n import set_default_language
+        set_default_language(args.lang if hasattr(args, "lang") else "pl")
+    except (ImportError, AttributeError):
+        pass
+
     # Handle subcommands
     if args.command == "generate-prd":
         if not check_environment():
             sys.exit(1)
         asyncio.run(generate_prd(args.project, args.output))
+        return
+
+    if args.command == "import-interviews":
+        cmd_import_interviews(args)
+        return
+
+    if args.command == "export-report":
+        cmd_export_report(args)
+        return
+
+    if args.command == "assumptions":
+        cmd_assumptions(args)
+        return
+
+    if args.command == "export-miro":
+        cmd_export_miro(args)
+        return
+
+    if args.command == "export-gdocs":
+        cmd_export_gdocs(args)
         return
 
     if args.check:
@@ -351,5 +669,9 @@ def main():
     ))
 
 
+
+
+
 if __name__ == "__main__":
     main()
+

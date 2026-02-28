@@ -1,0 +1,46 @@
+# Product Discovery — Polish strings
+report:
+  title: "Raport Discovery"
+  verdict: "Werdykt"
+  confidence: "Pewność"
+  evidence_level: "Poziom dowodów"
+  duration: "Czas trwania"
+  roi: "Zwrot z inwestycji"
+  jtbd_analysis: "Analiza JTBD"
+  functional_job: "Zadanie funkcjonalne"
+  emotional_job: "Zadanie emocjonalne"
+  social_job: "Zadanie społeczne"
+  competing_solutions: "Rozwiązania konkurencyjne"
+  competitive_analysis: "Analiza konkurencji"
+  forces_diagram: "Diagram sił"
+  assumption_map: "Mapa założeń"
+  synthetic_users: "Użytkownicy syntetyczni"
+  scorecard: "Karta wyników"
+
+assumptions:
+  types:
+    desirability: "Pożądalność"
+    viability: "Opłacalność"
+    feasibility: "Wykonalność"
+    usability: "Użyteczność"
+    ethical: "Etyczność"
+  statuses:
+    untested: "Nietestowane"
+    testing: "W trakcie testowania"
+    validated: "Zwalidowane"
+    invalidated: "Obalone"
+
+interview:
+  importing: "Importowanie wywiadu"
+  insights_found: "Znalezione insighty"
+  saturation_score: "Wskaźnik nasycenia"
+  quality: "Jakość odpowiedzi"
+  genuine: "Autentyczna"
+  polite_lie: "Grzecznościowe kłamstwo"
+  vague: "Niejasna/spekulatywna"
+
+cli:
+  check_ok: "Wszystkie importy OK"
+  check_fail: "Sprawdzenie importów NIEPOWODZENIE"
+  no_checkpoint: "Brak checkpointu dla projektu"
+  resuming: "Wznawianie sesji..."

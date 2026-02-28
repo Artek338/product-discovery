@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "product-discovery"
-version = "0.2.0"
+version = "0.3.0"
 description = "Complete product/service discovery toolkit — AI-powered JTBD analysis, synthetic interviews, competitive research, and evidence-based GO/NO-GO decisions."
 readme = "README.md"
 license = {text = "MIT"}
@@ -42,6 +42,24 @@ dev = [
 ]
 research = [
     "exa_py>=1.0.0",
+]
+viz = [
+    "plotly>=5.18.0",
+    "kaleido>=0.2.1",
+]
+miro = [
+    "requests>=2.31.0",
+]
+gdocs = [
+    "google-api-python-client>=2.100.0",
+    "google-auth>=2.23.0",
+    "google-auth-oauthlib>=1.1.0",
+]
+docx = [
+    "python-docx>=1.0.0",
+]
+all = [
+    "product-discovery[viz,miro,gdocs,docx]",
 ]
 
 [project.scripts]
