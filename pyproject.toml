@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "product-discovery"
-version = "0.3.0"
+version = "1.0.0"
 description = "Complete product/service discovery toolkit — AI-powered JTBD analysis, synthetic interviews, competitive research, and evidence-based GO/NO-GO decisions."
 readme = "README.md"
 license = {text = "MIT"}
@@ -60,6 +60,9 @@ docx = [
 ]
 all = [
     "product-discovery[viz,miro,gdocs,docx]",
+]
+pdf = [
+    "playwright>=1.40.0",
 ]
 
 [project.scripts]

@@ -459,6 +459,81 @@ def cmd_export_gdocs(args) -> None:
     )
 
 
+def cmd_industry(args) -> None:
+    """Manage industry context."""
+    from product_discovery.tools.industry_context import IndustryStore
+    store = IndustryStore(base_dir=str(Path(args.output) / "_industry_context"))
+
+    if args.action == "list":
+        slugs = store.list()
+        if not slugs:
+            print("No industry contexts yet. Create one: industry init <slug>")
+        else:
+            for s in slugs:
+                ctx = store.get(s)
+                print(f"  {s:<20} {ctx.completeness}% complete  ({ctx.sessions_count} sessions)")
+    elif args.action == "show":
+        ctx = store.get(args.slug)
+        if ctx:
+            print(ctx.summary())
+        else:
+            print(f"❌ No context for '{args.slug}'")
+    elif args.action == "init":
+        ctx = store.init(args.slug, display_name=args.name or "")
+        print(f"✅ Created: {ctx.slug} ({ctx.display_name})")
+    elif args.action == "enrich":
+        data = _load_project_data(args.project or "unnamed", args.output)
+        ctx = store.enrich_from_discovery(args.slug, data or {})
+        print(f"✅ Enriched: {ctx.slug} → {ctx.completeness}% complete")
+    elif args.action == "import":
+        if not args.file:
+            print("❌ --file required for import")
+            sys.exit(1)
+        text = Path(args.file).read_text(encoding="utf-8")
+        ctx = store.enrich_from_text(args.slug, text, source=args.file)
+        print(f"✅ Imported {len(text)} chars → {ctx.slug}")
+
+
+def cmd_solutions(args) -> None:
+    """Manage solutions impact/effort matrix."""
+    from product_discovery.tools.impact_effort import SolutionBoard
+    board = SolutionBoard.load(args.project, args.output)
+
+    if args.action == "add":
+        if not args.name:
+            print("❌ --name required"); sys.exit(1)
+        s = board.add(args.name, impact=args.impact or 5, effort=args.effort or 5)
+        board.save(args.output)
+        print(f"✅ {s.id}: {s.name} → {s.quadrant_label}")
+    elif args.action == "list":
+        print(board.summary_table())
+    elif args.action == "matrix":
+        print(board.summary_table())
+
+
+def cmd_score(args) -> None:
+    """Score a discovery session."""
+    from product_discovery.tools.scoring_rubric import score_discovery
+    data = _load_project_data(args.project, args.output)
+    if not data:
+        print(f"❌ No data for project '{args.project}'"); sys.exit(1)
+    result = score_discovery(args.project, data)
+    print(result.summary())
+
+
+def cmd_templates(args) -> None:
+    """Show available session templates."""
+    from product_discovery.templates.session_templates import show_all_templates, get_template
+    if args.show:
+        t = get_template(args.show)
+        if t:
+            print(t.summary())
+        else:
+            print(f"❌ Unknown template: {args.show}")
+    else:
+        print(show_all_templates())
+
+
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
@@ -531,6 +606,33 @@ def main():
     gdocs_parser.add_argument("--share-with", help="Comma-separated emails to share doc with")
     gdocs_parser.add_argument("--template-id", help="Google Doc template ID to copy from")
 
+    # industry subcommand
+    ind_parser = subparsers.add_parser("industry", help="Manage industry context")
+    ind_parser.add_argument("action", choices=["list", "show", "init", "enrich", "import"])
+    ind_parser.add_argument("slug", nargs="?", default="")
+    ind_parser.add_argument("--name", help="Display name for new industry")
+    ind_parser.add_argument("--project", "-p", help="Project to enrich from")
+    ind_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    ind_parser.add_argument("--file", "-f", help="File to import notes from")
+
+    # solutions subcommand
+    sol_parser = subparsers.add_parser("solutions", help="Impact/Effort matrix")
+    sol_parser.add_argument("action", choices=["add", "list", "matrix"])
+    sol_parser.add_argument("--project", "-p", required=True, help="Project name")
+    sol_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+    sol_parser.add_argument("--name", help="Solution name")
+    sol_parser.add_argument("--impact", type=int, help="Impact score 1-10")
+    sol_parser.add_argument("--effort", type=int, help="Effort score 1-10")
+
+    # score subcommand
+    scr_parser = subparsers.add_parser("score", help="Score discovery session quality")
+    scr_parser.add_argument("--project", "-p", required=True, help="Project name")
+    scr_parser.add_argument("--output", "-o", default="projects", help="Output directory")
+
+    # templates subcommand
+    tpl_parser = subparsers.add_parser("templates", help="List session templates")
+    tpl_parser.add_argument("--show", help="Show specific template by ID")
+
     # Main arguments
     parser.add_argument(
         "idea",
@@ -562,6 +664,20 @@ def main():
         help="Show progress of a discovery session",
     )
     parser.add_argument(
+        "--industry",
+        help="Industry slug for context (e.g. fintech, edtech)",
+    )
+    parser.add_argument(
+        "--template",
+        choices=["new_product", "improvement", "competitive_intel", "recruitment", "workshop"],
+        help="Session template for workflow",
+    )
+    parser.add_argument(
+        "--notify-slack",
+        action="store_true",
+        help="Send Slack notification on completion",
+    )
+    parser.add_argument(
         "--lang",
         default="pl",
         choices=["pl", "en"],
@@ -575,7 +691,7 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version="%(prog)s 0.3.0",
+        version="%(prog)s 1.0.0",
     )
 
     args = parser.parse_args()
@@ -615,6 +731,22 @@ def main():
 
     if args.command == "export-gdocs":
         cmd_export_gdocs(args)
+        return
+
+    if args.command == "industry":
+        cmd_industry(args)
+        return
+
+    if args.command == "solutions":
+        cmd_solutions(args)
+        return
+
+    if args.command == "score":
+        cmd_score(args)
+        return
+
+    if args.command == "templates":
+        cmd_templates(args)
         return
 
     if args.check:
