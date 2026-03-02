@@ -66,4 +66,10 @@ export const api = {
 
   exportPdfUrl: (sessionId: string): string =>
     `${BASE}/export/${sessionId}/pdf`,
+
+  exportMiro: (
+    sessionId: string,
+    body: { token?: string; board_id?: string; dry_run: boolean; sections?: string[] },
+  ): Promise<{ url: string; items_created: number; dry_run: boolean; log: string[] }> =>
+    request(`/export/${sessionId}/miro`, { method: 'POST', body: JSON.stringify(body) }),
 }

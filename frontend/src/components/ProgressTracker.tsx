@@ -17,31 +17,47 @@ const NODES = [
 
 export default function ProgressTracker({ progress, currentNode, logs = [] }: Props) {
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
+    <div className="space-y-5">
+      <div className="space-y-1.5">
         {NODES.map((node) => {
           const done = progress >= node.step
           const active = currentNode === node.key
           return (
             <div
               key={node.key}
-              className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                active ? 'bg-indigo-50 border border-indigo-200' :
-                done ? 'bg-green-50' : 'bg-gray-50'
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                active
+                  ? 'border border-teal-500 bg-[#F0FDFA]'
+                  : done
+                  ? 'bg-[#DCFCE7]'
+                  : 'bg-surface'
               }`}
             >
-              <span className="text-xl w-6 text-center">
-                {done && !active ? '✅' : active ? '🔄' : '⏳'}
-              </span>
-              <span className={`text-sm font-medium ${
-                active ? 'text-indigo-700' : done ? 'text-green-700' : 'text-gray-500'
+              {/* Dot indicator */}
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  active ? 'bg-teal-500 animate-pulse' :
+                  done ? 'bg-success' :
+                  'bg-slate-300'
+                }`}
+              />
+
+              <span className={`text-sm font-sans font-medium ${
+                active ? 'text-teal-600' :
+                done ? 'text-[#15803D]' :
+                'text-slate-400'
               }`}>
-                {node.step}. {node.label}
+                <span className="font-mono text-xs mr-1.5 opacity-60">{node.step}.</span>
+                {node.label}
               </span>
+
               {active && (
-                <span className="ml-auto text-xs text-indigo-500 animate-pulse">
+                <span className="ml-auto text-xs text-teal-500 font-sans animate-pulse">
                   W toku...
                 </span>
+              )}
+              {done && !active && (
+                <span className="ml-auto text-xs text-[#15803D] font-sans">✓</span>
               )}
             </div>
           )
@@ -49,9 +65,9 @@ export default function ProgressTracker({ progress, currentNode, logs = [] }: Pr
       </div>
 
       {logs.length > 0 && (
-        <div className="bg-gray-900 rounded-lg p-4 max-h-48 overflow-y-auto">
+        <div className="bg-sidebar rounded-[12px] p-4 max-h-48 overflow-y-auto">
           {logs.map((log, i) => (
-            <p key={i} className="text-xs text-green-400 font-mono leading-5">
+            <p key={i} className="text-xs text-teal-400 font-mono leading-5">
               {log}
             </p>
           ))}

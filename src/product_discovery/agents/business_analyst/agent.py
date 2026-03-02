@@ -48,11 +48,29 @@ _model = AnthropicModel(
     ),
 )
 
+# Tańszy model do zadań strukturalnych (AssumptionMapNode)
+# Haiku ~4× tańszy od Sonnet — wystarczy do mapowania założeń (brak kreatywności)
+_haiku_model = AnthropicModel(
+    "claude-haiku-4-5-20251001",
+    provider=AnthropicProvider(
+        api_key=os.getenv("ANTHROPIC_API_KEY", "placeholder-for-import-check")
+    ),
+)
+
 ba_agent = Agent(
     _model,
     output_type=JTBDAnalysisResult,
     system_prompt=_system_prompt,
     retries=3,
+)
+
+# Haiku agent — tylko inference (bez tools), do zadań strukturalnych
+# Używany przez: AssumptionMapNode
+ba_agent_haiku = Agent(
+    _haiku_model,
+    output_type=JTBDAnalysisResult,
+    system_prompt=_system_prompt,
+    retries=2,
 )
 
 

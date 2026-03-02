@@ -32,8 +32,15 @@ env/
 .DS_Store
 Thumbs.db
 
+# Node
+node_modules/
+frontend/dist/
+
 # Project outputs
 projects/*/
+
+# Pencil DB
+backend/discovery.db
 
 # Logs
 logs/

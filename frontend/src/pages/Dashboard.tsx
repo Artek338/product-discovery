@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { Plus, Folder } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAppStore } from '../store/appStore'
 import VerdictBadge from '../components/VerdictBadge'
@@ -13,12 +14,26 @@ const EVIDENCE_LABELS: Record<string, string> = {
   '5_Cash': 'Gotówka',
 }
 
-const STATUS_CLASSES: Record<string, string> = {
-  queued: 'bg-gray-100 text-gray-600',
-  running: 'bg-blue-100 text-blue-700 animate-pulse',
-  completed: 'bg-green-100 text-green-700',
-  failed: 'bg-red-100 text-red-700',
+const STATUS_BADGE: Record<string, string> = {
+  queued:    'badge-status-queued',
+  running:   'badge-status-running',
+  completed: 'badge-status-completed',
+  failed:    'badge-status-failed',
 }
+
+const STATUS_LABEL: Record<string, string> = {
+  queued: 'Oczekuje', running: 'W toku', completed: 'Ukończona', failed: 'Błąd sesji',
+}
+
+const MODE_BADGE: Record<string, string> = {
+  auto:     'badge-mode-auto',
+  problem:  'badge-mode-problem',
+  solution: 'badge-mode-solution',
+  simulate: 'badge-mode-simulate',
+}
+
+const RUNNING_DOT = 'inline-block w-1.5 h-1.5 rounded-full bg-[#22C55E] mr-1.5 animate-pulse'
+const QUEUED_DOT  = 'inline-block w-1.5 h-1.5 rounded-full bg-[#F59E0B] mr-1.5'
 
 export default function Dashboard() {
   const { projects, setProjects } = useAppStore()
@@ -28,55 +43,73 @@ export default function Dashboard() {
   }, [setProjects])
 
   return (
-    <div className="max-w-4xl mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Product Discovery</h1>
-          <p className="text-gray-500 text-sm mt-1">
-            {projects.length} {projects.length === 1 ? 'sesja' : 'sesji'}
-          </p>
-        </div>
+    <div className="p-5">
+      {/* Pasek akcji */}
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-sm font-sans text-slate-500">
+          {projects.length} {projects.length === 1 ? 'sesja' : 'sesji'}
+        </p>
         <Link to="/discovery/new" className="btn-primary">
-          + Nowy projekt
+          <Plus size={15} />
+          Nowy projekt
         </Link>
       </div>
 
+      {/* Pusta lista */}
       {projects.length === 0 ? (
         <div className="card p-12 text-center">
-          <p className="text-5xl mb-4">🔍</p>
-          <h2 className="text-lg font-semibold text-gray-700 mb-2">Brak projektów</h2>
-          <p className="text-gray-500 mb-6">Uruchom pierwsze discovery, aby zobaczyć wyniki tutaj.</p>
-          <Link to="/discovery/new" className="btn-primary inline-block">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ backgroundColor: '#F0FDFA' }}
+          >
+            <Folder size={28} style={{ color: '#14B8A6' }} />
+          </div>
+          <h2 className="font-mono font-semibold text-lg text-[#0D2535] mb-2">Brak projektów</h2>
+          <p className="text-slate-400 font-sans text-sm mb-6">
+            Uruchom pierwsze discovery, aby zobaczyć wyniki tutaj.
+          </p>
+          <Link to="/discovery/new" className="btn-primary inline-flex">
+            <Plus size={15} />
             Zacznij teraz
           </Link>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-3">
           {projects.map((p) => (
             <Link
               key={p.session_id}
               to={`/discovery/${p.session_id}`}
-              className="card p-5 hover:shadow-md transition-shadow flex items-start justify-between gap-4"
+              className="card p-5 hover:shadow-md transition-shadow flex items-start justify-between gap-4 group"
             >
               <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-gray-900 truncate">{p.project_name}</h3>
-                  <span
-                    className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_CLASSES[p.status] || ''}`}
-                  >
-                    {p.status}
+                {/* Tytuł + badges */}
+                <div className="flex items-center gap-2 flex-wrap mb-2">
+                  <h3 className="font-mono font-semibold text-[#0D2535] group-hover:text-[#14B8A6] transition-colors truncate">
+                    {p.project_name}
+                  </h3>
+
+                  <span className={STATUS_BADGE[p.status] || 'badge-status-queued'}>
+                    <span className={p.status === 'running' ? RUNNING_DOT : QUEUED_DOT} />
+                    {STATUS_LABEL[p.status] || p.status}
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">
+
+                  <span className={MODE_BADGE[p.mode] || 'badge-mode-auto'}>
                     {p.mode}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 flex-wrap">
+                {/* Meta */}
+                <div className="flex items-center gap-4 text-sm text-slate-400 font-sans flex-wrap">
                   {p.evidence_level && (
                     <span>Dowody: {EVIDENCE_LABELS[p.evidence_level] || p.evidence_level}</span>
                   )}
                   {p.confidence != null && (
-                    <span>Pewność: {p.confidence}%</span>
+                    <span>
+                      Pewność:{' '}
+                      <span className="font-semibold" style={{ color: '#14B8A6' }}>
+                        {p.confidence}%
+                      </span>
+                    </span>
                   )}
                   <span>{new Date(p.created_at).toLocaleDateString('pl-PL')}</span>
                 </div>

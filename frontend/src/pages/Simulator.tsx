@@ -46,10 +46,9 @@ export default function Simulator() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-8 px-4">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Symulator wywiadów</h1>
-        <p className="text-gray-500 text-sm mt-1">
+    <div className="max-w-5xl mx-auto p-5">
+      <div className="mb-5">
+        <p className="text-slate-400 font-sans text-sm">
           Ćwicz pytania behawioralne na syntetycznych użytkownikach zanim przeprowadzisz prawdziwe wywiady
         </p>
       </div>

@@ -1,0 +1,25 @@
+{
+  "project_name": "{{project_name}}",
+  "duration_hours": 0.05,
+  "competitive_report": "## Analiza Konkurencji (MOCK)\n\n### Kluczowi gracze\n- **Notion** — all-in-one workspace, 30M+ użytkowników\n- **Linear** — issue tracking dla developerów\n- **Jira** — enterprise PM tool\n\n### Luka rynkowa\nŻaden z graczy nie adresuje segmentu **solo founders** w fazie pre-PMF.\nNarzędzia są zbyt ciężkie lub zbyt drogie dla 1-osobowych zespołów.\n\n### Wniosek\nPrzestrzeń niezagospodarowana dla lekkich narzędzi discovery.",
+  "forces_report": "## Forces Diagram (MOCK)\n\n### Push (siły wypychające ze status quo)\n- **7/10** — Tracimy czas na ręczne notatki z wywiadów\n- **6/10** — Brak struktury → zapominamy kluczowe insighty\n\n### Pull (siły przyciągające do nowego)\n- **8/10** — Automatyczna synteza JTBD zamiast ręcznej\n- **7/10** — Strukturalny GO/NO-GO zamiast gut feeling\n\n### Anxiety (obawy przed zmianą)\n- **4/10** — Czy AI naprawdę rozumie kontekst domeny?\n- **3/10** — Koszt subskrypcji przy małej liczbie projektów\n\n### Habit (siła obecnego nawyku)\n- **5/10** — Notion + własne szablony działa \"wystarczająco dobrze\"\n\n**Wynik**: Push+Pull (28) > Anxiety+Habit (12) → SWITCH_LIKELY ✅",
+  "assumption_map": "## Mapa Założeń (MOCK)\n\n### FATAL\n| Założenie | Dowody | Jak przetestować |\n|-----------|--------|------------------|\n| Użytkownicy mają problem z syntezą wywiadów | 2_Past_Behavior | 5 wywiadów z PM-ami |\n| Gotowi płacić >$29/mies | 1_Preference | Landing page z ceną |\n\n### HIGH RISK\n| Założenie | Dowody | Jak przetestować |\n|-----------|--------|------------------|\n| LLM daje trafne insighty JTBD | 0_Opinion | A/B z ręczną analizą |\n\n### PRIORYTETY\n1. Walidacja gotowości do płacenia — presell 10 licencji\n2. Jakość insightów AI vs. human PM",
+  "synthetic_archetypes": "Archetyp 1: Solo Founder Pre-PMF\nDemografika: 28-40 lat, technical founder, 1. startup\nJTBD: Chcę szybko walidować pomysły zanim przepalę 6 miesięcy budowania\nForces: Wysoki Push (ból iteracji w ciemno), Niski Habit (brak ustalonych procesów)\n\nArchetyp 2: PM w Scaleupie\nDemografika: 32-45 lat, doświadczony PM, zespół 5-15 osób\nJTBD: Chcę mieć strukturalne dowody dla stakeholderów, nie tylko opinie\nForces: Wysoki Pull (raport dla zarządu), Wysoka Anxiety (co powie zespół?)",
+  "jtbd": {
+    "functional_job": "Przeprowadzić pełną walidację pomysłu produktowego w ciągu 2 godzin zamiast 2 tygodni",
+    "emotional_job": "Czuć pewność przy decyzji GO/NO-GO zamiast działać na gut feeling",
+    "social_job": "Wyglądać na PM-a który podejmuje decyzje na podstawie danych, nie opinii",
+    "competing_solutions": ["Notion + własne szablony", "Ręczne notatki z wywiadów", "JTBD Excel template", "Doradca produktowy ($200/h)"],
+    "verdict": "GO",
+    "evidence_level": "2_Past_Behavior",
+    "confidence": 72,
+    "reasoning": "## Uzasadnienie (MOCK)\n\nWerdykt GO oparty na:\n1. **Behawioralny dowód**: 4/5 ankietowanych PM-ów pokazało swoje aktualne arkusze Excel do syntezy wywiadów — wszystkie były chaotyczne\n2. **Siły przemawiają za zmianą**: Push+Pull (28) wyraźnie dominuje nad Anxiety+Habit (12)\n3. **Luka rynkowa**: brak lekkiego narzędzia dla solo founders w fazie pre-PMF\n\n### Ryzyka\n- Retention zależy od jakości AI — wymaga testów A/B vs. ręczna analiza\n- CAC może być wysoki w segmencie solo founders (niski LTV)"
+  },
+  "scorecard": {
+    "hours_invested": 0.05,
+    "evidence_level_achieved": "2_Past_Behavior",
+    "confidence_before": 85,
+    "confidence_after": 72,
+    "roi_estimate": "✅ GO — 3min (MOCK) walidacji dało pewność 72% (zaoszczędza ~36h budowania bez potwierdzenia)"
+  }
+}

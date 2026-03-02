@@ -1,9 +1,16 @@
 """
 Discovery routes — uruchamianie sesji, polling statusu, pobieranie wyników.
+
+Zmienne środowiskowe:
+  DISCOVERY_MOCK=true  — zwraca gotowy fixture bez wywołań LLM ($0, ~3s)
+                         Użyj do testów UI i developmentu frontendu.
 """
+import asyncio
 import json
+import os
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 
@@ -24,6 +31,9 @@ from backend.models import (
 
 router = APIRouter()
 
+_MOCK_MODE = os.getenv("DISCOVERY_MOCK", "false").lower() == "true"
+_FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "mock_discovery_result.json"
+
 # Mapowanie węzłów na numery kroków (dla progress 0-8)
 NODE_PROGRESS = {
     "SyntheticInterviewNode": 1,
@@ -36,6 +46,34 @@ NODE_PROGRESS = {
     "ScorecardNode": 8,
     "UserInputNeededNode": 8,
 }
+
+
+async def _run_mock_task(session_id: str, project_name: str):
+    """
+    Mock task — symuluje Discovery bez wywołań LLM (~3s).
+    Używany gdy DISCOVERY_MOCK=true.
+    """
+    fixture_text = _FIXTURE_PATH.read_text(encoding="utf-8")
+    fixture_text = fixture_text.replace("{{project_name}}", project_name)
+    result_data = json.loads(fixture_text)
+
+    # Symulacja postępu węzłów (żeby UI ProgressTracker działał)
+    mock_steps = [
+        ("SyntheticInterviewNode", "Generowanie archetypów (MOCK)..."),
+        ("BehavioralInterviewNode", "Analiza pytań wywiadowych (MOCK)..."),
+        ("CompetitiveResearchNode", "Research konkurencji (MOCK)..."),
+        ("EvidenceGradingNode", "Ocena dowodów (MOCK)..."),
+        ("ForcesDiagramNode", "Forces Diagram (MOCK)..."),
+        ("SynthesisNode", "Synteza JTBD (MOCK)..."),
+        ("AssumptionMapNode", "Mapa założeń (MOCK)..."),
+        ("ScorecardNode", "Scorecard (MOCK)..."),
+    ]
+    for i, (node, msg) in enumerate(mock_steps, 1):
+        await asyncio.sleep(0.3)
+        await update_session_status(session_id, "running", progress=i, current_node=node, log_entry=f"[{node}] {msg}")
+
+    await save_result(session_id, json.dumps(result_data))
+    await update_session_status(session_id, "completed", progress=8, log_entry="Discovery completed (MOCK)")
 
 
 async def _run_discovery_task(
@@ -117,14 +155,17 @@ async def run_discovery_endpoint(
 
     await create_session(session_id, request.project_name, request.mode, created_at)
 
-    background_tasks.add_task(
-        _run_discovery_task,
-        session_id=session_id,
-        idea=request.idea,
-        project_name=request.project_name,
-        mode=request.mode,
-        interview_notes=request.interview_notes or "",
-    )
+    if _MOCK_MODE:
+        background_tasks.add_task(_run_mock_task, session_id=session_id, project_name=request.project_name)
+    else:
+        background_tasks.add_task(
+            _run_discovery_task,
+            session_id=session_id,
+            idea=request.idea,
+            project_name=request.project_name,
+            mode=request.mode,
+            interview_notes=request.interview_notes or "",
+        )
 
     return DiscoveryRunResponse(session_id=session_id, status="queued")
 

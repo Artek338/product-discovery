@@ -4,29 +4,105 @@
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    background-color: #EFF2F7;
+    color: #0D2535;
+    @apply antialiased font-sans;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mono;
   }
 }
 
 @layer components {
+  /* ── Karty ── */
   .card {
-    @apply bg-white rounded-xl border border-gray-200 shadow-sm;
+    @apply bg-white rounded-[12px] border border-[#E2E8F0];
   }
 
+  /* ── Przyciski ── */
   .btn-primary {
-    @apply bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium
-           hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500
-           disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
-  }
-
-  .btn-secondary {
-    @apply bg-white text-gray-700 px-4 py-2 rounded-lg font-medium border border-gray-300
-           hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300
+    @apply inline-flex items-center justify-center gap-2
+           bg-[#14B8A6] text-white px-5 py-[10px] rounded-[8px]
+           text-sm font-semibold font-sans
+           hover:bg-[#2DD4BF] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]
+           disabled:bg-[#E2E8F0] disabled:text-slate-400 disabled:cursor-not-allowed
            transition-colors;
   }
 
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2
+           bg-white text-[#14B8A6] px-5 py-[9px] rounded-[8px]
+           text-sm font-semibold font-sans border border-[#14B8A6]
+           hover:bg-[#CCFBF1] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]
+           transition-colors;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2
+           bg-[#CCFBF1] text-[#0D9488] px-5 py-[10px] rounded-[8px]
+           text-sm font-semibold font-sans
+           hover:bg-[#14B8A6] hover:text-white focus:outline-none
+           transition-colors;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2
+           bg-[#EF4444] text-white px-5 py-[10px] rounded-[8px]
+           text-sm font-semibold font-sans
+           hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400
+           transition-colors;
+  }
+
+  /* ── Pola formularzy ── */
   .input {
-    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
-           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500;
+    @apply w-full rounded-[8px] border border-slate-300 px-[14px] py-[10px]
+           text-sm font-sans text-[#0D2535] bg-white
+           placeholder:text-slate-400
+           focus:outline-none focus:ring-2 focus:ring-[#14B8A6] focus:border-[#14B8A6] focus:bg-[#F0FDFA]
+           disabled:bg-[#F8FAFC] disabled:text-slate-400 disabled:border-[#E2E8F0]
+           transition-colors;
+  }
+
+  /* ── Badge'y trybów Discovery ── */
+  .badge-mode-auto {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#EDE9FE] text-[#6D28D9] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-problem {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#FFF7ED] text-[#C2410C] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-solution {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#F0FDFA] text-[#0D9488] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-simulate {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#EFF6FF] text-[#1D4ED8] text-xs font-semibold font-sans;
+  }
+
+  /* ── Badge'y statusów sesji ── */
+  .badge-status-running {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#DCFCE7] text-[#15803D] text-xs font-semibold font-sans;
+  }
+
+  .badge-status-completed {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-slate-100 text-slate-600 text-xs font-semibold font-sans;
+  }
+
+  .badge-status-failed {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold font-sans;
+  }
+
+  .badge-status-queued {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
+           bg-[#FEF3C7] text-[#B45309] text-xs font-semibold font-sans;
   }
 }

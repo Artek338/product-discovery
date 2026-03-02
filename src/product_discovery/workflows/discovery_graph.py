@@ -50,7 +50,7 @@ from typing import Union
 from pydantic_graph import BaseNode, End, Graph, GraphRunContext
 
 from product_discovery.workflows.discovery_state import DiscoveryResult, DiscoveryState, DiscoveryValueScorecard
-from product_discovery.agents.business_analyst.agent import ba_agent
+from product_discovery.agents.business_analyst.agent import ba_agent, ba_agent_haiku
 from product_discovery.agents.business_analyst.schemas import JTBDAnalysisResult
 from product_discovery.agents.synthetic_user.agent import generate_archetypes
 
@@ -704,7 +704,8 @@ Użyj tych samych wartości verdict/evidence/confidence co w analizie JTBD powy�
 """
 
         try:
-            result = await ba_agent.run(assumption_prompt)
+            # Haiku wystarczy — zadanie strukturalne bez potrzeby głębokiej analizy
+            result = await ba_agent_haiku.run(assumption_prompt)
 
             # Zapisujemy mapę założeń do state
             if result.output.reasoning:
