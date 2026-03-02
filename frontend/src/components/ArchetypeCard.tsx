@@ -1,4 +1,6 @@
 import type { SyntheticProfile } from '../types/discovery'
+import { useAppStore } from '../store/appStore'
+import { t } from '../lib/i18n'
 
 interface Props {
   profile: SyntheticProfile
@@ -24,6 +26,7 @@ function getIcon(name: string): string {
 }
 
 export default function ArchetypeCard({ profile, selected, onClick, compact }: Props) {
+  const { language } = useAppStore()
   const icon = getIcon(profile.archetype_name)
 
   if (compact) {
@@ -76,12 +79,12 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
 
       <div className="space-y-4">
         <div>
-          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">Psychology</span>
+          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">{t(language, 'arch_psych')}</span>
           <p className="text-slate-600 text-sm font-sans leading-relaxed">{profile.psychology}</p>
         </div>
 
         <div>
-          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">Primary JTBD</span>
+          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">{t(language, 'arch_jtbd')}</span>
           <p className="text-slate-700 text-sm font-sans italic bg-slate-50 p-3 rounded-lg border border-slate-100">{profile.jtbd_hypothesis}</p>
         </div>
 
@@ -89,7 +92,7 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
           <div className="mt-4 pt-4 border-t border-slate-100">
             <span className="text-xs font-sans font-semibold text-red-500 uppercase tracking-widest flex items-center gap-1.5 mb-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
-              Behavioral Red Flags
+              {t(language, 'arch_red_flags')}
             </span>
             <p className="text-sm text-red-600 font-sans">{profile.red_flags_expected[0]}</p>
           </div>

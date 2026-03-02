@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, ResponseQuality, SyntheticProfile } from '../types/discovery'
 import { api } from '../lib/api'
 import { Send, Eye, EyeOff } from 'lucide-react'
+import { useAppStore } from '../store/appStore'
+import { t } from '../lib/i18n'
 
 interface Props {
   archetype: SyntheticProfile
@@ -27,6 +29,7 @@ function QualityBadge({ quality }: { quality?: ResponseQuality }) {
 }
 
 export default function SimulatorChat({ archetype, messages, onMessage }: Props) {
+  const { language } = useAppStore()
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
@@ -87,7 +90,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
             </p>
             <p className="text-xs text-slate-500 font-sans mt-0.5 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Ready to answer
+              {t(language, 'chat_ready')}
             </p>
           </div>
         </div>
@@ -100,9 +103,9 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
             <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-[#E2E8F0] flex items-center justify-center text-2xl mb-4">
               💬
             </div>
-            <h3 className="font-sans font-semibold text-[#0D2535] mb-2">Start the Interview</h3>
+            <h3 className="font-sans font-semibold text-[#0D2535] mb-2">{t(language, 'chat_empty_title')}</h3>
             <p className="text-sm font-sans leading-relaxed">
-              Ask your first question to {archetype.archetype_name}. Focus on specific past behaviors rather than general hypothetical preferences.
+              {t(language, 'chat_empty_sub')}
             </p>
           </div>
         )}
@@ -138,7 +141,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
                       onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
                       className="text-xs font-sans font-medium text-slate-400 hover:text-[#0D2535] transition-colors flex items-center gap-1"
                     >
-                      {expandedIdx === idx ? <><EyeOff size={12} /> Hide Insights</> : <><Eye size={12} /> Reveal Insights</>}
+                      {expandedIdx === idx ? <><EyeOff size={12} /> {t(language, 'chat_hide_insights')}</> : <><Eye size={12} /> {t(language, 'chat_reveal')}</>}
                     </button>
                   </div>
 
@@ -147,7 +150,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
                       {msg.hidden_thought && (
                         <div>
                           <span className="font-semibold text-indigo-600 flex items-center gap-1.5 mb-1.5 uppercase tracking-wide text-[10px]">
-                            <span className="text-sm">💭</span> Hidden Thought
+                            <span className="text-sm">💭</span> {t(language, 'chat_hidden_thought')}
                           </span>
                           <p className="text-slate-600 leading-relaxed italic border-l-2 border-indigo-100 pl-3 py-0.5">{msg.hidden_thought}</p>
                         </div>
@@ -155,7 +158,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
                       {msg.follow_up_suggested && (
                         <div>
                           <span className="font-semibold text-blue-600 flex items-center gap-1.5 mb-1.5 uppercase tracking-wide text-[10px]">
-                            <span className="text-sm">🎯</span> Ideal Follow-up
+                            <span className="text-sm">🎯</span> {t(language, 'chat_ideal_followup')}
                           </span>
                           <p className="text-slate-600 leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-50">"{msg.follow_up_suggested}"</p>
                           <button
@@ -165,7 +168,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
                               setExpandedIdx(null)
                             }}
                           >
-                            Use this question <span className="text-lg leading-none">→</span>
+                            {t(language, 'chat_use_followup')} <span className="text-lg leading-none">→</span>
                           </button>
                         </div>
                       )}
@@ -209,7 +212,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Ask a question... (Enter to send)"
+            placeholder={t(language, 'chat_ph')}
             disabled={loading}
             className="flex-1 bg-transparent px-4 py-2 outline-none font-sans text-sm text-[#0D2535] placeholder:text-slate-400"
           />
@@ -222,7 +225,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
           </button>
         </div>
         <div className="text-center mt-2">
-          <span className="text-[10px] font-sans text-slate-400 font-medium">Synthetic users may occasionally drift. Use specific follow-ups.</span>
+          <span className="text-[10px] font-sans text-slate-400 font-medium">{t(language, 'chat_disclaimer')}</span>
         </div>
       </div>
     </div>

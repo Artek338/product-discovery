@@ -7,6 +7,7 @@ import type {
   ProjectSummary,
   SyntheticProfile,
 } from '../types/discovery'
+import type { Lang } from '../lib/i18n'
 
 interface AppState {
   // Projects list
@@ -33,6 +34,21 @@ interface AppState {
   chatHistory: ChatMessage[]
   addMessage: (m: ChatMessage) => void
   clearChat: () => void
+
+  // i18n
+  language: Lang
+  setLanguage: (lang: Lang) => void
+
+  // Settings (persisted in localStorage)
+  apiKey: string
+  setApiKey: (key: string) => void
+
+  llmModel: string
+  setLlmModel: (model: string) => void
+}
+
+function getLS(key: string, fallback: string): string {
+  try { return localStorage.getItem(key) ?? fallback } catch { return fallback }
 }
 
 export const useAppStore = create<AppState>((set) => ({
@@ -57,4 +73,25 @@ export const useAppStore = create<AppState>((set) => ({
   chatHistory: [],
   addMessage: (m) => set((s) => ({ chatHistory: [...s.chatHistory, m] })),
   clearChat: () => set({ chatHistory: [] }),
+
+  // i18n — domyślnie 'pl', persistowane w localStorage
+  language: (getLS('pd_language', 'pl') as Lang),
+  setLanguage: (language) => {
+    localStorage.setItem('pd_language', language)
+    set({ language })
+  },
+
+  // API key — persistowany w localStorage
+  apiKey: getLS('pd_api_key', ''),
+  setApiKey: (apiKey) => {
+    localStorage.setItem('pd_api_key', apiKey)
+    set({ apiKey })
+  },
+
+  // LLM model — persistowany w localStorage
+  llmModel: getLS('pd_llm_model', 'claude-sonnet-4-6'),
+  setLlmModel: (llmModel) => {
+    localStorage.setItem('pd_llm_model', llmModel)
+    set({ llmModel })
+  },
 }))
