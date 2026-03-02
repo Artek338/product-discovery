@@ -7,7 +7,7 @@ Te dataclassy definiują co MUSI być zebrane przed przejściem do następnego w
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 
 from product_discovery.agents.business_analyst.schemas import JTBDAnalysisResult
 
@@ -53,6 +53,10 @@ class DiscoveryState:
 
     # v2.0: Mapa założeń
     assumption_map: list[str] = field(default_factory=list)
+
+    # Opcjonalny callback wywoływany przez każdy węzeł (dla Web UI progress tracking)
+    # Sygnatura: async def callback(node_name: str, message: str = "") -> None
+    progress_callback: Optional[Any] = field(default=None, repr=False)
 
     @property
     def has_minimum_interviews(self) -> bool:

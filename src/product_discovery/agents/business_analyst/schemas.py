@@ -103,8 +103,8 @@ class JTBDAnalysisResult(BaseModel):
     # ========================
 
     competing_solutions: List[str] = Field(
-        min_items=1,
-        max_items=10,
+        min_length=1,
+        max_length=10,
         description="""
         What are users doing TODAY to solve this job?
         Include:
@@ -257,7 +257,7 @@ class PMFAssessment(BaseModel):
     )
 
     evidence: List[str] = Field(
-        min_items=1,
+        min_length=1,
         description="""
         Specific evidence supporting this assessment.
 
@@ -302,8 +302,8 @@ class OpportunitySolutionTree(BaseModel):
     )
 
     potential_solutions: List[str] = Field(
-        min_items=1,
-        max_items=5,
+        min_length=1,
+        max_length=5,
         description="""
         3-5 potential solutions to explore.
         At this stage, these are IDEAS, not commitments.
@@ -316,8 +316,8 @@ class OpportunitySolutionTree(BaseModel):
     )
 
     next_experiments: List[str] = Field(
-        min_items=1,
-        max_items=3,
+        min_length=1,
+        max_length=3,
         description="""
         1-3 experiments to validate solutions.
 
@@ -337,7 +337,7 @@ class ForceEntry(BaseModel):
     """Single force with score and evidence."""
     score: int = Field(ge=1, le=10, description="Siła efektu (1=słaby, 10=bardzo silny)")
     evidence: List[str] = Field(
-        min_items=1,
+        min_length=1,
         description="Cytaty z wywiadów dokumentujące tę siłę. Każdy cytat = konkretny respondent."
     )
 
@@ -432,17 +432,17 @@ class SyntheticUserProfile(BaseModel):
     )
 
     expected_interview_behaviors: List[str] = Field(
-        min_items=2,
+        min_length=2,
         description="Jak ten archetyp zachowa się w wywiadzie? Kiedy będzie grzecznościowy vs. szczery?"
     )
 
     hypotheses_to_test: List[str] = Field(
-        min_items=2,
+        min_length=2,
         description="Konkretne hipotezy do sprawdzenia podczas wywiadu z tym archetypem"
     )
 
     red_flags_expected: List[str] = Field(
-        min_items=1,
+        min_length=1,
         description="Jakich red flags spodziewamy się od tego archetypu? (np. zbyt optymistyczne odpowiedzi)"
     )
 

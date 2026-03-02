@@ -27,7 +27,7 @@ market analysis, and technology validation. You use multiple data sources to bui
 competitive reports with citations and evidence."""
 
 _model = AnthropicModel(
-    "claude-sonnet-4-6",
+    "claude-3-haiku-20240307",
     provider=AnthropicProvider(
         api_key=os.getenv("ANTHROPIC_API_KEY", "placeholder-for-import-check")
     ),

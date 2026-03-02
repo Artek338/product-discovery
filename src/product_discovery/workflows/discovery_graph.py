@@ -74,6 +74,8 @@ class SyntheticInterviewNode(BaseNode[DiscoveryState]):
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
     ) -> BehavioralInterviewNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("SyntheticInterviewNode", "Generowanie archetypów...")
         print("\n[0/7] SYNTHETIC INTERVIEW NODE [v2.0]")
         print("      Generowanie archetypów syntetycznych użytkowników...")
 
@@ -126,6 +128,8 @@ class BehavioralInterviewNode(BaseNode[DiscoveryState]):
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
     ) -> CompetitiveResearchNode | UserInputNeededNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("BehavioralInterviewNode", "Analiza insightów z wywiadów...")
         print("\n[1/5] BEHAVIORAL INTERVIEW NODE")
         print("      Zbieranie insightów z wywiadów behawioralnych...")
 
@@ -236,6 +240,8 @@ class CompetitiveResearchNode(BaseNode[DiscoveryState]):
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
     ) -> EvidenceGradingNode | UserInputNeededNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("CompetitiveResearchNode", "Research konkurencji...")
         print("\n[2/5] COMPETITIVE RESEARCH NODE")
         print("      Analiza konkurencji przez OSINT agenta...")
 
@@ -311,6 +317,8 @@ class EvidenceGradingNode(BaseNode[DiscoveryState]):
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
     ) -> ForcesDiagramNode | UserInputNeededNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("EvidenceGradingNode", "Ocena poziomu dowodów...")
         print("\n[3/7] EVIDENCE GRADING NODE")
         print("      Klasyfikacja zebranych dowodów...")
 
@@ -435,6 +443,8 @@ class ForcesDiagramNode(BaseNode[DiscoveryState]):
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
     ) -> SynthesisNode | UserInputNeededNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("ForcesDiagramNode", "Analiza sił Push/Pull/Anxiety/Habit...")
         print("\n[4/7] FORCES DIAGRAM NODE [v2.0]")
         print("      Analiza sił: Push / Pull / Anxiety / Habit...")
 
@@ -513,7 +523,7 @@ ZASADA WERDYKTU:
 
         print(f"      Evidence: {result.output.evidence_level} | Verdict: {result.output.verdict}")
 
-        # Jeśli Forces są wyraźnie przeciwne i werdykt NO-GO → zatrzymujemy
+        # Jeśli Forces są wyraźnie przeciwne i brak planu mitygacji → zatrzymujemy
         if switch_unlikely and not any(
             kw in reasoning_lower for kw in ["mitygacja", "mitigation", "zmniejsz", "reduce"]
         ):
@@ -552,6 +562,8 @@ class SynthesisNode(BaseNode[DiscoveryState]):
     """
 
     async def run(self, ctx: GraphRunContext[DiscoveryState]) -> AssumptionMapNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("SynthesisNode", "Synteza analizy JTBD...")
         print("\n[5/7] SYNTHESIS NODE")
         print("      Generowanie finalnej analizy JTBD...")
 
@@ -640,6 +652,8 @@ class AssumptionMapNode(BaseNode[DiscoveryState]):
     """
 
     async def run(self, ctx: GraphRunContext[DiscoveryState]) -> ScorecardNode:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("AssumptionMapNode", "Mapowanie założeń i ryzyk...")
         print("\n[6/7] ASSUMPTION MAP NODE [v2.0]")
         print("      Mapowanie założeń i ryzyk...")
 
@@ -774,6 +788,8 @@ class ScorecardNode(BaseNode[DiscoveryState]):
     """
 
     async def run(self, ctx: GraphRunContext[DiscoveryState]) -> End[DiscoveryResult]:
+        if ctx.state.progress_callback:
+            await ctx.state.progress_callback("ScorecardNode", "Obliczanie Scorecard i ROI...")
         print("\n[7/7] SCORECARD NODE")
         print("      Obliczanie wartości Discovery session...")
 
@@ -860,6 +876,7 @@ async def run_discovery(
     idea_description: str,
     project_name: str = "unnamed",
     interview_notes: str = "",
+    progress_callback=None,
 ) -> DiscoveryResult:
     """
     Uruchamia pełny Discovery Graph dla podanego pomysłu.
@@ -870,6 +887,8 @@ async def run_discovery(
         interview_notes: Opcjonalne notatki z wywiadów (SYNTHETIC_INTERVIEWS.md
                          lub ręczne notatki) — zasilają BehavioralInterviewNode
                          i EvidenceGradingNode prawdziwymi dowodami behawioralnymi.
+        progress_callback: Opcjonalny async callable(node_name: str, message: str) wywoływany
+                           na początku każdego węzła — używany przez Web UI do śledzenia postępu.
 
     Returns:
         DiscoveryResult z JTBDAnalysisResult i Scorecard
@@ -878,6 +897,7 @@ async def run_discovery(
         project_name=project_name,
         idea_description=idea_description,
         interview_notes=interview_notes,
+        progress_callback=progress_callback,
     )
 
     print(f"\n🔍 Discovery Phase: {project_name}")

@@ -52,6 +52,7 @@ ba_agent = Agent(
     _model,
     output_type=JTBDAnalysisResult,
     system_prompt=_system_prompt,
+    retries=3,
 )
 
 

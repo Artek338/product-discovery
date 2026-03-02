@@ -158,6 +158,97 @@ async def run_discovery_workflow(
     print(f"\n📄 Report saved to: {output_file}")
 
 
+async def run_interview_simulator(segment: str, archetype_idx: int = 0, max_rounds: int = 10) -> None:
+    """
+    Interaktywny REPL symulujący wywiad z syntetycznym użytkownikiem.
+
+    Przepływ:
+    1. Generuje 4 archetypy dla podanego segmentu
+    2. Użytkownik wybiera archetyp (lub podano --archetype)
+    3. REPL: user pisze pytanie → AI odpowiada jako ten archetyp
+    4. Po każdej odpowiedzi: analiza czy to genuine/polite_lie/vague
+    """
+    from product_discovery.agents.synthetic_user.agent import generate_archetypes, simulate_interview_response
+
+    print("\n" + "=" * 60)
+    print("SYMULATOR WYWIADÓW PM — Ćwicz technikę pytań")
+    print("=" * 60)
+
+    if not segment:
+        segment = input("\nPodaj segment użytkowników (np. 'Freelancerzy UX, 5-15 klientów/rok'): ").strip()
+        if not segment:
+            print("❌ Segment jest wymagany.")
+            return
+
+    print(f"\nGeneruję 4 archetypy dla: {segment}")
+    print("(Może potrwać 10-20 sekund...)\n")
+
+    archetypes = await generate_archetypes(segment)
+
+    print("\nDostępne archetypy:")
+    for i, arch in enumerate(archetypes, 1):
+        print(f"  [{i}] {arch.archetype_name}")
+        print(f"      {arch.demographics[:80]}")
+
+    chosen = archetype_idx
+    if not (1 <= chosen <= len(archetypes)):
+        while True:
+            try:
+                chosen = int(input(f"\nWybierz archetyp [1-{len(archetypes)}]: "))
+                if 1 <= chosen <= len(archetypes):
+                    break
+                print(f"Podaj liczbę od 1 do {len(archetypes)}")
+            except ValueError:
+                print("Podaj liczbę całkowitą")
+
+    archetype = archetypes[chosen - 1]
+
+    print(f"\n{'=' * 60}")
+    print(f"Rozmawiasz z: {archetype.archetype_name}")
+    print(f"Dane: {archetype.demographics}")
+    print(f"Psychologia: {archetype.psychology[:120]}...")
+    print(f"{'=' * 60}")
+    print("\nZasady:")
+    print("  - Zadaj pytanie, AI odpowiada jako ten użytkownik")
+    print("  - Po odpowiedzi zobaczysz: jakość (genuine/vague/polite_lie) + ukryta myśl")
+    print("  - Wpisz 'exit' lub 'q' żeby zakończyć\n")
+
+    interview_history = ""
+    round_num = 0
+
+    while round_num < max_rounds:
+        round_num += 1
+        question = input(f"[Pytanie {round_num}/{max_rounds}] Ty: ").strip()
+
+        if question.lower() in ("exit", "q", "quit", "koniec"):
+            break
+        if not question:
+            round_num -= 1
+            continue
+
+        response = await simulate_interview_response(archetype, question, interview_history)
+
+        quality_icons = {
+            "genuine": "✅ GENUINE",
+            "detailed": "💎 DETAILED",
+            "polite_lie": "🚩 POLITE LIE",
+            "vague": "⚠️ VAGUE",
+        }
+        quality_label = quality_icons.get(response.response_quality, response.response_quality)
+
+        print(f"\n[{archetype.archetype_name}]: {response.response}")
+        print(f"\n  → Jakość odpowiedzi: {quality_label}")
+        print(f"  → Ukryta myśl: {response.hidden_thought}")
+        print(f"  → Sugerowane follow-up: {response.follow_up_suggested}\n")
+
+        interview_history += f"Q: {question}\nA: {response.response}\n\n"
+
+    print("\n" + "=" * 60)
+    print("Sesja zakończona.")
+    print(f"Przeprowadzono {round_num} rund pytań z: {archetype.archetype_name}")
+    print("=" * 60)
+
+
 def show_status(project_name: str, output_dir: str = "projects") -> None:
     """Show session progress for a project."""
     from product_discovery.workflows.session import SessionManager
@@ -633,10 +724,33 @@ def main():
     tpl_parser = subparsers.add_parser("templates", help="List session templates")
     tpl_parser.add_argument("--show", help="Show specific template by ID")
 
-    # Main arguments
-    parser.add_argument(
-        "idea",
+    # simulate subcommand — interaktywny symulator wywiadów
+    sim_parser = subparsers.add_parser(
+        "simulate",
+        help="Symuluj wywiad z syntetycznym użytkownikiem (ćwicz technikę pytań)"
+    )
+    sim_parser.add_argument(
+        "segment",
         nargs="?",
+        default="",
+        help="Segment użytkowników np. 'Freelancerzy UX, 5-15 klientów/rok'"
+    )
+    sim_parser.add_argument(
+        "--archetype", "-a",
+        type=int,
+        default=0,
+        help="Numer archetypu do symulacji (1-4, domyślnie: wybór interaktywny)"
+    )
+    sim_parser.add_argument(
+        "--rounds", "-n",
+        type=int,
+        default=10,
+        help="Maksymalna liczba rund pytań (domyślnie: 10)"
+    )
+
+    # Main arguments — idea is extracted before argparse (see pre-parsing below)
+    parser.add_argument(
+        "--idea",
         help="Product/service idea description",
     )
     parser.add_argument(
@@ -673,6 +787,17 @@ def main():
         help="Session template for workflow",
     )
     parser.add_argument(
+        "--mode",
+        choices=["auto", "problem", "solution"],
+        default="auto",
+        help=(
+            "Tryb Discovery: "
+            "'auto' = pełna analiza (domyślny), "
+            "'problem' = walidacja pomysłu od zera (Problem Discovery), "
+            "'solution' = mam już decyzję, szukam CO/JAK zbudować (Solution/Feature Discovery)"
+        ),
+    )
+    parser.add_argument(
         "--notify-slack",
         action="store_true",
         help="Send Slack notification on completion",
@@ -694,7 +819,22 @@ def main():
         version="%(prog)s 1.0.0",
     )
 
-    args = parser.parse_args()
+    # Pre-parse: if first arg looks like an idea (not a known subcommand), extract it
+    known_commands = {
+        "generate-prd", "import-interviews", "export-report", "assumptions",
+        "export-miro", "export-gdocs", "industry", "solutions", "score", "templates",
+        "simulate",
+    }
+    raw_args = sys.argv[1:]
+    idea_text = None
+    if raw_args and raw_args[0] not in known_commands and not raw_args[0].startswith("-"):
+        idea_text = raw_args.pop(0)
+
+    args = parser.parse_args(raw_args)
+
+    # Inject idea if extracted
+    if idea_text and not getattr(args, "idea", None):
+        args.idea = idea_text
 
     # Load .env
     load_dotenv()
@@ -749,6 +889,16 @@ def main():
         cmd_templates(args)
         return
 
+    if args.command == "simulate":
+        if not check_environment():
+            sys.exit(1)
+        asyncio.run(run_interview_simulator(
+            segment=getattr(args, "segment", ""),
+            archetype_idx=getattr(args, "archetype", 0),
+            max_rounds=getattr(args, "rounds", 10),
+        ))
+        return
+
     if args.check:
         ok = check_imports()
         ok = check_environment() and ok
@@ -772,7 +922,7 @@ def main():
         print("   ⚠️  Full resume not yet implemented — re-run with full idea description")
         return
 
-    if not args.idea:
+    if not getattr(args, "idea", None):
         parser.print_help()
         sys.exit(1)
 
@@ -792,9 +942,31 @@ def main():
             print(f"⚠️  Interview file not found: {path}")
             sys.exit(1)
 
+    # Dodaj prefix trybu do opisu — agenty wiedzą czego szukać
+    mode = getattr(args, "mode", "auto")
+    idea_with_mode = args.idea
+    if mode == "solution":
+        idea_with_mode = (
+            "[TRYB: SOLUTION/FEATURE DISCOVERY]\n"
+            "Decyzja biznesowa o budowie już zapadła. NIE walidujemy opłacalności od zera.\n"
+            "Cel: ustalić CO konkretnie zbudować i JAK to powinno działać (zakres MVP).\n"
+            "Skup się na: user stories, przepływach, priorytetyzacji (MoSCoW/RICE), "
+            "mapowaniu procesów i zrozumieniu głębokości bólu użytkownika.\n"
+            "POMIŃ: analizę czy warto budować, pytania o opłacalność rynkową.\n\n"
+            f"{args.idea}"
+        )
+    elif mode == "problem":
+        idea_with_mode = (
+            "[TRYB: PROBLEM/IDEA VALIDATION]\n"
+            "Walidujemy od zera czy problem istnieje i czy warto go rozwiązywać.\n"
+            "Cel: GO/NO-GO na podstawie dowodów behawioralnych.\n"
+            "Skup się na: JTBD, Forces Diagram, Evidence Grading, alternatywach użytkowników.\n\n"
+            f"{args.idea}"
+        )
+
     # Run discovery
     asyncio.run(run_discovery_workflow(
-        idea=args.idea,
+        idea=idea_with_mode,
         project_name=args.project,
         interview_notes=interview_notes,
         output_dir=args.output,
