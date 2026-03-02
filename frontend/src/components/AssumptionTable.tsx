@@ -49,9 +49,9 @@ export default function AssumptionTable({ assumptionMap }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
-        <CountBadge count={fatal.length} color="bg-red-100 text-red-800" label="FATAL" />
-        <CountBadge count={high.length} color="bg-orange-100 text-orange-800" label="HIGH RISK" />
-        <CountBadge count={acceptable.length} color="bg-green-100 text-green-800" label="ACCEPTABLE" />
+        <CountBadge count={fatal.length} color="bg-[#FEE2E2] text-[#DC2626]" label="FATAL" />
+        <CountBadge count={high.length} color="bg-[#FFF7ED] text-[#C2410C]" label="HIGH RISK" />
+        <CountBadge count={acceptable.length} color="bg-[#DCFCE7] text-[#15803D]" label="ACCEPTABLE" />
       </div>
 
       <div className="prose prose-sm max-w-none">

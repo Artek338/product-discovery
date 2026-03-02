@@ -30,19 +30,18 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
     return (
       <button
         onClick={onClick}
-        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-          selected
-            ? 'border-indigo-500 bg-indigo-50 shadow-md'
-            : 'border-gray-200 bg-white hover:border-indigo-300 hover:shadow-sm'
-        }`}
+        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected
+          ? 'border-[#14B8A6] bg-[#F0FDFA] shadow-sm'
+          : 'border-[#E2E8F0] bg-white hover:border-[#2DD4BF] hover:shadow-sm'
+          }`}
       >
         <div className="flex items-start gap-3">
           <span className="text-2xl">{icon}</span>
           <div className="min-w-0">
-            <p className="font-semibold text-sm text-gray-900 truncate">
+            <p className="font-semibold text-sm text-[#0D2535] truncate font-sans">
               {profile.archetype_name}
             </p>
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-2 font-sans">
               {profile.demographics}
             </p>
           </div>
@@ -53,52 +52,46 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
 
   return (
     <div
-      className={`card p-5 cursor-pointer transition-all ${
-        selected ? 'ring-2 ring-indigo-500' : 'hover:shadow-md'
-      }`}
+      className={`bg-white rounded-2xl p-6 transition-all ${selected ? 'border-2 border-[#14B8A6] shadow-md relative' : 'border border-[#E2E8F0] shadow-sm hover:shadow-md cursor-pointer hover:border-[#2DD4BF]'
+        }`}
       onClick={onClick}
     >
-      <div className="flex items-center gap-3 mb-3">
-        <span className="text-3xl">{icon}</span>
-        <h3 className="font-bold text-gray-900">{profile.archetype_name}</h3>
+      {selected && (
+        <div className="absolute top-4 right-4 text-[#14B8A6]">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+      )}
+
+      <div className="flex justify-between items-start mb-6">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl shadow-sm">
+            {icon}
+          </div>
+          <div>
+            <h3 className="font-sans font-bold text-[#0D2535] text-lg leading-tight">{profile.archetype_name}</h3>
+            <p className="text-sm font-sans text-slate-500 mt-0.5 line-clamp-1">{profile.demographics}</p>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="space-y-4">
         <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Profil</span>
-          <p className="text-gray-700 mt-0.5">{profile.demographics}</p>
+          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">Psychology</span>
+          <p className="text-slate-600 text-sm font-sans leading-relaxed">{profile.psychology}</p>
         </div>
 
         <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Psychologia</span>
-          <p className="text-gray-700 mt-0.5 text-xs">{profile.psychology}</p>
-        </div>
-
-        <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">JTBD</span>
-          <p className="text-gray-700 mt-0.5 text-xs italic">{profile.jtbd_hypothesis}</p>
-        </div>
-
-        <div>
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-            Hipotezy do sprawdzenia
-          </span>
-          <ul className="mt-1 space-y-0.5">
-            {profile.hypotheses_to_test.slice(0, 2).map((h, i) => (
-              <li key={i} className="text-xs text-gray-600 flex items-start gap-1">
-                <span className="text-indigo-500 mt-0.5">•</span>
-                {h}
-              </li>
-            ))}
-          </ul>
+          <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest block mb-1">Primary JTBD</span>
+          <p className="text-slate-700 text-sm font-sans italic bg-slate-50 p-3 rounded-lg border border-slate-100">{profile.jtbd_hypothesis}</p>
         </div>
 
         {profile.red_flags_expected.length > 0 && (
-          <div>
-            <span className="text-xs font-semibold text-red-500 uppercase tracking-wide">
-              🚩 Red flags
+          <div className="mt-4 pt-4 border-t border-slate-100">
+            <span className="text-xs font-sans font-semibold text-red-500 uppercase tracking-widest flex items-center gap-1.5 mb-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+              Behavioral Red Flags
             </span>
-            <p className="text-xs text-red-600 mt-0.5">{profile.red_flags_expected[0]}</p>
+            <p className="text-sm text-red-600 font-sans">{profile.red_flags_expected[0]}</p>
           </div>
         )}
       </div>

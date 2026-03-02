@@ -68,7 +68,7 @@ export default function ForcesChart({ forcesReport }: Props) {
   return (
     <div>
       <div ref={chartRef} />
-      <p className="text-xs text-gray-500 text-center mt-1">
+      <p className="text-slate-400 font-sans text-xs text-center mt-1">
         Linia przerywana = próg (5/10). Push+Pull vs Anxiety+Habit
       </p>
     </div>

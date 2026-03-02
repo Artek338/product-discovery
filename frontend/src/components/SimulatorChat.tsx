@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import type { ChatMessage, ResponseQuality, SyntheticProfile } from '../types/discovery'
 import { api } from '../lib/api'
+import { Send, Eye, EyeOff } from 'lucide-react'
 
 interface Props {
   archetype: SyntheticProfile
@@ -9,18 +10,18 @@ interface Props {
 }
 
 const QUALITY_CONFIG: Record<ResponseQuality, { label: string; icon: string; classes: string }> = {
-  genuine:    { label: 'GENUINE',      icon: '✅', classes: 'bg-green-100 text-green-700' },
-  detailed:   { label: 'DETAILED',     icon: '💎', classes: 'bg-blue-100 text-blue-700' },
-  polite_lie: { label: 'POLITE LIE',   icon: '🚩', classes: 'bg-red-100 text-red-700' },
-  vague:      { label: 'VAGUE',        icon: '⚠️', classes: 'bg-amber-100 text-amber-700' },
+  genuine: { label: 'Genuine Insight', icon: '✅', classes: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+  detailed: { label: 'Detailed Recount', icon: '📝', classes: 'bg-blue-50 text-blue-700 border-blue-100' },
+  polite_lie: { label: 'Polite Lie', icon: '🚩', classes: 'bg-red-50 text-red-700 border-red-100' },
+  vague: { label: 'Vague Stance', icon: '⚠️', classes: 'bg-amber-50 text-amber-700 border-amber-100' },
 }
 
 function QualityBadge({ quality }: { quality?: ResponseQuality }) {
   if (!quality) return null
   const cfg = QUALITY_CONFIG[quality]
   return (
-    <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${cfg.classes}`}>
-      {cfg.icon} {cfg.label}
+    <span className={`inline-flex items-center gap-1.5 text-[11px] font-sans font-semibold px-2.5 py-1 rounded-full border ${cfg.classes}`}>
+      <span>{cfg.icon}</span> {cfg.label}
     </span>
   )
 }
@@ -65,7 +66,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
     } catch (err) {
       onMessage({
         role: 'assistant',
-        content: `Błąd: ${err instanceof Error ? err.message : 'Nieznany błąd'}`,
+        content: `Error: ${err instanceof Error ? err.message : 'Unknown error occurred.'}`,
       })
     } finally {
       setLoading(false)
@@ -73,71 +74,98 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#F8FAFC]">
       {/* Nagłówek */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 rounded-t-xl">
-        <p className="text-sm font-semibold text-gray-700">
-          Rozmowa z: <span className="text-indigo-600">{archetype.archetype_name}</span>
-        </p>
-        <p className="text-xs text-gray-500 mt-0.5">Zadaj pytanie — Enter lub kliknij Wyślij</p>
+      <div className="px-6 py-4 border-b border-[#E2E8F0] bg-white rounded-t-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#F0FDFA] border border-[#CCFBF1] flex items-center justify-center text-xl shadow-sm">
+            👤
+          </div>
+          <div>
+            <p className="text-sm font-sans font-bold text-[#0D2535]">
+              {archetype.archetype_name}
+            </p>
+            <p className="text-xs text-slate-500 font-sans mt-0.5 flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Ready to answer
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Wiadomości */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
+      <div className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 custom-scrollbar">
         {messages.length === 0 && (
-          <div className="text-center text-gray-400 text-sm mt-8">
-            <p className="text-2xl mb-2">💬</p>
-            <p>Zadaj pierwsze pytanie archetypu</p>
-            <p className="text-xs mt-1 text-gray-300">
-              Wskazówka: zacznij od pytania o przeszłe zachowanie, nie preferencje
+          <div className="flex flex-col items-center justify-center h-full text-center text-slate-500 max-w-sm mx-auto">
+            <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-[#E2E8F0] flex items-center justify-center text-2xl mb-4">
+              💬
+            </div>
+            <h3 className="font-sans font-semibold text-[#0D2535] mb-2">Start the Interview</h3>
+            <p className="text-sm font-sans leading-relaxed">
+              Ask your first question to {archetype.archetype_name}. Focus on specific past behaviors rather than general hypothetical preferences.
             </p>
           </div>
         )}
 
         {messages.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] ${msg.role === 'user' ? 'order-last' : ''}`}>
-              {/* Bubble */}
-              <div
-                className={`rounded-2xl px-4 py-3 text-sm ${
-                  msg.role === 'user'
-                    ? 'bg-indigo-600 text-white rounded-br-sm'
-                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-sm shadow-sm'
-                }`}
-              >
-                {msg.content}
+            <div className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+
+              <div className="flex items-end gap-2 mb-1.5">
+                {msg.role === 'assistant' && (
+                  <div className="w-6 h-6 rounded-full bg-white border border-[#E2E8F0] flex items-center justify-center text-[10px] shadow-sm shrink-0 mb-1">
+                    👤
+                  </div>
+                )}
+
+                {/* Bubble */}
+                <div
+                  className={`px-5 py-3.5 text-sm font-sans leading-relaxed shadow-sm ${msg.role === 'user'
+                    ? 'bg-[#14B8A6] text-white rounded-2xl rounded-br-sm'
+                    : 'bg-white border border-[#E2E8F0] text-[#0D2535] rounded-2xl rounded-bl-sm'
+                    }`}
+                >
+                  {msg.content}
+                </div>
               </div>
 
               {/* Badge jakości + rozwijany panel (tylko assistant) */}
               {msg.role === 'assistant' && msg.quality && (
-                <div className="mt-1.5 space-y-1">
-                  <div className="flex items-center gap-2">
+                <div className="ml-8 w-full">
+                  <div className="flex items-center gap-3">
                     <QualityBadge quality={msg.quality} />
                     <button
                       onClick={() => setExpandedIdx(expandedIdx === idx ? null : idx)}
-                      className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      className="text-xs font-sans font-medium text-slate-400 hover:text-[#0D2535] transition-colors flex items-center gap-1"
                     >
-                      {expandedIdx === idx ? 'ukryj ▲' : 'szczegóły ▼'}
+                      {expandedIdx === idx ? <><EyeOff size={12} /> Hide Insights</> : <><Eye size={12} /> Reveal Insights</>}
                     </button>
                   </div>
 
                   {expandedIdx === idx && (
-                    <div className="bg-gray-50 rounded-lg p-3 text-xs space-y-2 border border-gray-100">
+                    <div className="mt-3 bg-white rounded-xl p-4 text-xs font-sans space-y-4 border border-[#E2E8F0] shadow-sm relative before:absolute before:content-[''] before:w-3 before:h-3 before:bg-white before:border-l before:border-t before:border-[#E2E8F0] before:rotate-45 before:-top-1.5 before:left-6">
                       {msg.hidden_thought && (
                         <div>
-                          <span className="font-semibold text-purple-600">💭 Ukryta myśl:</span>
-                          <p className="text-gray-600 mt-0.5 italic">{msg.hidden_thought}</p>
+                          <span className="font-semibold text-indigo-600 flex items-center gap-1.5 mb-1.5 uppercase tracking-wide text-[10px]">
+                            <span className="text-sm">💭</span> Hidden Thought
+                          </span>
+                          <p className="text-slate-600 leading-relaxed italic border-l-2 border-indigo-100 pl-3 py-0.5">{msg.hidden_thought}</p>
                         </div>
                       )}
                       {msg.follow_up_suggested && (
                         <div>
-                          <span className="font-semibold text-blue-600">🎯 Follow-up:</span>
-                          <p className="text-gray-600 mt-0.5">"{msg.follow_up_suggested}"</p>
+                          <span className="font-semibold text-blue-600 flex items-center gap-1.5 mb-1.5 uppercase tracking-wide text-[10px]">
+                            <span className="text-sm">🎯</span> Ideal Follow-up
+                          </span>
+                          <p className="text-slate-600 leading-relaxed bg-blue-50/50 p-3 rounded-lg border border-blue-50">"{msg.follow_up_suggested}"</p>
                           <button
-                            className="mt-1 text-blue-500 hover:text-blue-700 underline text-xs"
-                            onClick={() => setInput(msg.follow_up_suggested!)}
+                            className="mt-2 text-[#14B8A6] hover:text-[#0D9488] font-medium text-xs flex items-center gap-1"
+                            onClick={() => {
+                              setInput(msg.follow_up_suggested!)
+                              setExpandedIdx(null)
+                            }}
                           >
-                            Użyj tego pytania →
+                            Use this question <span className="text-lg leading-none">→</span>
                           </button>
                         </div>
                       )}
@@ -151,15 +179,20 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 shadow-sm">
-              <div className="flex gap-1">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-gray-400 animate-bounce"
-                    style={{ animationDelay: `${i * 0.15}s` }}
-                  />
-                ))}
+            <div className="flex items-end gap-2">
+              <div className="w-6 h-6 rounded-full bg-white border border-[#E2E8F0] flex items-center justify-center text-[10px] shadow-sm shrink-0 mb-1">
+                👤
+              </div>
+              <div className="bg-white border border-[#E2E8F0] rounded-2xl rounded-bl-sm px-5 py-4 shadow-sm">
+                <div className="flex gap-1.5">
+                  {[0, 1, 2].map(i => (
+                    <div
+                      key={i}
+                      className="w-2h-2 rounded-full bg-[#14B8A6] animate-bounce"
+                      style={{ animationDelay: `${i * 0.15}s` }}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -169,24 +202,27 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white rounded-b-xl">
-        <div className="flex gap-2">
+      <div className="p-4 border-t border-[#E2E8F0] bg-white rounded-b-2xl z-10">
+        <div className="flex gap-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-1.5 focus-within:border-[#14B8A6] focus-within:ring-1 focus-within:ring-[#14B8A6] transition-all">
           <input
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Zadaj pytanie... (Enter = wyślij)"
+            placeholder="Ask a question... (Enter to send)"
             disabled={loading}
-            className="input flex-1"
+            className="flex-1 bg-transparent px-4 py-2 outline-none font-sans text-sm text-[#0D2535] placeholder:text-slate-400"
           />
           <button
             onClick={handleSend}
             disabled={loading || !input.trim()}
-            className="btn-primary px-5"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white bg-[#14B8A6] hover:bg-[#0D9488] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
           >
-            Wyślij
+            <Send size={16} className="ml-0.5" />
           </button>
+        </div>
+        <div className="text-center mt-2">
+          <span className="text-[10px] font-sans text-slate-400 font-medium">Synthetic users may occasionally drift. Use specific follow-ups.</span>
         </div>
       </div>
     </div>
