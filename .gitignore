@@ -35,9 +35,22 @@ Thumbs.db
 # Node
 node_modules/
 frontend/dist/
+e2e/node_modules/
+e2e/playwright-report/
+e2e/test-results/
 
 # Project outputs
 projects/*/
+
+# Private / personal files (nie commituj)
+_private/
+.agents/
+.claude/
+
+# User config and data
+~/.product-discovery/
+*.tokens.json
+google_tokens.json
 
 # Pencil DB
 backend/discovery.db

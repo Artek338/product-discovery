@@ -73,10 +73,11 @@ export default function NewDiscovery() {
       <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E2E8F0] space-y-8">
         {/* Nazwa projektu */}
         <div>
-          <label className="block font-sans text-sm font-semibold text-[#0D2535] mb-2">
+          <label htmlFor="projectName" className="block font-sans text-sm font-semibold text-[#0D2535] mb-2">
             {t(language, 'nd_project_name')} <span className="text-red-500">*</span>
           </label>
           <input
+            id="projectName"
             type="text"
             value={projectName}
             onChange={e => setProjectName(e.target.value)}
@@ -88,10 +89,11 @@ export default function NewDiscovery() {
 
         {/* Opis pomysłu */}
         <div>
-          <label className="block font-sans text-sm font-semibold text-[#0D2535] mb-2">
+          <label htmlFor="idea" className="block font-sans text-sm font-semibold text-[#0D2535] mb-2">
             {t(language, 'nd_idea')} <span className="text-red-500">*</span>
           </label>
           <textarea
+            id="idea"
             value={idea}
             onChange={e => setIdea(e.target.value)}
             rows={5}
@@ -114,6 +116,8 @@ export default function NewDiscovery() {
               <button
                 key={m.value}
                 type="button"
+                role="radio"
+                aria-checked={mode === m.value}
                 onClick={() => setMode(m.value)}
                 className={`p-4 rounded-xl border-2 transition-all ${mode === m.value
                   ? 'border-[#14B8A6] bg-[#F0FDFA]'
@@ -133,7 +137,7 @@ export default function NewDiscovery() {
         {/* Notatki z wywiadów */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="block font-sans text-sm font-semibold text-[#0D2535]">
+            <label htmlFor="interviewNotes" className="block font-sans text-sm font-semibold text-[#0D2535]">
               {t(language, 'nd_notes')}
             </label>
             <div className="flex items-center gap-3">
@@ -153,6 +157,7 @@ export default function NewDiscovery() {
 
           <div className="relative">
             <textarea
+              id="interviewNotes"
               value={interviewNotes}
               onChange={e => {
                 setInterviewNotes(e.target.value)

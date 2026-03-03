@@ -23,12 +23,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from backend.config import load_config
 from backend.db import init_db
-from backend.routes import discovery, export, projects, simulator
+from backend.routes import auth, discovery, export, projects, settings, simulator
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    load_config()   # wczytaj config + zastosuj env fallbacki
     await init_db()
     yield
 
@@ -52,6 +54,8 @@ app.include_router(discovery.router, prefix="/api/discovery", tags=["discovery"]
 app.include_router(simulator.router, prefix="/api/simulator", tags=["simulator"])
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(export.router, prefix="/api/export", tags=["export"])
+app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
 
 @app.get("/api/health")

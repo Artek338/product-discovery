@@ -1,13 +1,16 @@
 // API client — fetch wrappers dla wszystkich endpointów backendu
 
 import type {
+  AppSettings,
   DiscoveryResult,
   DiscoveryRunRequest,
   DiscoveryRunResponse,
   DiscoveryStatusResponse,
+  GDocsExportResponse,
   ProjectSummary,
   SimulatorAnswer,
   SimulatorQuestionRequest,
+  SlackNotifyResponse,
   SyntheticProfile,
 } from '../types/discovery'
 
@@ -72,4 +75,44 @@ export const api = {
     body: { token?: string; board_id?: string; dry_run: boolean; sections?: string[] },
   ): Promise<{ url: string; items_created: number; dry_run: boolean; log: string[] }> =>
     request(`/export/${sessionId}/miro`, { method: 'POST', body: JSON.stringify(body) }),
+
+  exportSlack: (
+    sessionId: string,
+    body: { webhook_url?: string; report_url?: string; event?: string },
+  ): Promise<SlackNotifyResponse> =>
+    request(`/export/${sessionId}/slack`, { method: 'POST', body: JSON.stringify(body) }),
+
+  exportGDocs: (
+    sessionId: string,
+    body: { share_with?: string[]; folder_id?: string },
+  ): Promise<GDocsExportResponse> =>
+    request(`/export/${sessionId}/gdocs`, { method: 'POST', body: JSON.stringify(body) }),
+
+  // ============ Settings ============
+
+  getSettings: (): Promise<AppSettings> =>
+    request('/settings'),
+
+  updateSettings: (body: Partial<Record<string, unknown>>): Promise<AppSettings> =>
+    request('/settings', { method: 'PUT', body: JSON.stringify(body) }),
+
+  getIntegrationStatus: (): Promise<{
+    slack_configured: boolean
+    miro_configured: boolean
+    google_connected: boolean
+    data_dir: string
+    data_dir_exists: boolean
+    db_exists: boolean
+  }> => request('/settings/status'),
+
+  // ============ Auth / Google ============
+
+  getGoogleAuthUrl: (): Promise<{ auth_url: string }> =>
+    request('/auth/google'),
+
+  getGoogleStatus: (): Promise<{ connected: boolean; email: string }> =>
+    request('/auth/google/status'),
+
+  logoutGoogle: (): Promise<{ success: boolean; message: string }> =>
+    request('/auth/google/logout', { method: 'POST' }),
 }

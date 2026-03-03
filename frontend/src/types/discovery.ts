@@ -117,3 +117,37 @@ export interface ChatMessage {
   hidden_thought?: string
   follow_up_suggested?: string
 }
+
+// ============ Settings ============
+
+export interface AppSettings {
+  data_dir: string
+  anthropic_api_key_set: boolean
+  anthropic_api_key_preview: string
+  perplexity_api_key_set: boolean
+  serper_api_key_set: boolean
+  brave_api_key_set: boolean
+  miro_access_token_set: boolean
+  miro_board_id: string
+  slack_webhook_url_set: boolean
+  slack_auto_notify: boolean
+  llm_model: string
+  language: string
+  google_client_id_set: boolean
+  google_connected: boolean
+  discovery_mock: boolean
+}
+
+// ============ Export responses ============
+
+export interface SlackNotifyResponse {
+  sent: boolean
+  webhook_used: boolean
+  message: string
+}
+
+export interface GDocsExportResponse {
+  doc_url: string
+  doc_id: string
+  shared_with: string[]
+}

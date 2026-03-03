@@ -57,6 +57,9 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
   return (
     /* Backdrop */
     <div
+      role="dialog"
+      aria-modal="true"
+      data-testid="miro-modal"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(13,37,53,0.6)' }}
       onClick={e => { if (e.target === e.currentTarget) onClose() }}

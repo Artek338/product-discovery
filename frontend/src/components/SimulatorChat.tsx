@@ -217,8 +217,10 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
             className="flex-1 bg-transparent px-4 py-2 outline-none font-sans text-sm text-[#0D2535] placeholder:text-slate-400"
           />
           <button
+            data-testid="send-message-btn"
             onClick={handleSend}
             disabled={loading || !input.trim()}
+            aria-label="Wyślij"
             className="w-10 h-10 rounded-lg flex items-center justify-center text-white bg-[#14B8A6] hover:bg-[#0D9488] disabled:opacity-50 disabled:cursor-not-allowed transition-colors shrink-0"
           >
             <Send size={16} className="ml-0.5" />

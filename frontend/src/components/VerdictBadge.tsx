@@ -35,7 +35,7 @@ const SIZE_CLASSES = {
 export default function VerdictBadge({ verdict, size = 'md' }: Props) {
   if (!verdict) {
     return (
-      <span className={`inline-flex items-center rounded-[12px] border font-semibold font-mono ${SIZE_CLASSES[size]}`}
+      <span data-testid="verdict-badge" className={`inline-flex items-center rounded-[12px] border font-semibold font-mono ${SIZE_CLASSES[size]}`}
         style={{ background: '#F1F5F9', borderColor: '#E2E8F0', color: '#64748B' }}>
         —
       </span>
@@ -45,6 +45,7 @@ export default function VerdictBadge({ verdict, size = 'md' }: Props) {
   const cfg = CONFIG[verdict]
   return (
     <span
+      data-testid="verdict-badge"
       className={`inline-flex items-center rounded-[12px] border font-bold font-mono ${SIZE_CLASSES[size]}`}
       style={{ background: cfg.bg, borderColor: cfg.border, color: cfg.text }}
     >

@@ -32,6 +32,7 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
   if (compact) {
     return (
       <button
+        data-testid="archetype-card"
         onClick={onClick}
         className={`w-full p-4 rounded-xl border-2 transition-all ${selected
           ? 'border-[#14B8A6] bg-[#F0FDFA] shadow-sm'
@@ -55,6 +56,7 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
 
   return (
     <div
+      data-testid="archetype-card"
       className={`bg-white rounded-2xl p-6 transition-all ${selected ? 'border-2 border-[#14B8A6] shadow-md relative' : 'border border-[#E2E8F0] shadow-sm hover:shadow-md cursor-pointer hover:border-[#2DD4BF]'
         }`}
       onClick={onClick}

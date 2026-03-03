@@ -1,218 +1,252 @@
-# 🔍 Product Discovery
+# Product Discovery
 
-**AI-powered product/service discovery toolkit** — JTBD analysis, synthetic interviews, competitive research, evidence-based GO/NO-GO decisions, assumption tracking, and interactive reports.
+**AI-powered product discovery toolkit** — JTBD analysis, synthetic interviews, competitive research, evidence-based GO/NO-GO decisions, interactive reports.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)]()
-
-[🇵🇱 Wersja polska](README_PL.md) | [📖 User Guide](docs/USER_GUIDE.md)
+[![Version](https://img.shields.io/badge/version-2.3.0-green.svg)]()
 
 ---
 
-## 🎯 What is this?
+## What is this?
 
 Product Discovery is a **structured, AI-driven discovery process** that prevents building products nobody wants. It supports the full PM workflow — from idea validation through competitive analysis to export-ready reports.
 
-### Core Capabilities
+The tool is available as:
+- **Web UI** (recommended) — browser-based, full feature set
+- **CLI** — terminal interface for power users
 
-| Category | Features |
-|----------|----------|
-| **Discovery** | JTBD analysis, synthetic user interviews, behavioral interview coaching |
-| **Research** | OSINT competitive intelligence, adjacent market scanning |
-| **Analysis** | Evidence grading (6 levels), Forces Diagram, assumption mapping |
-| **Tracking** | Assumption tracker (Torres taxonomy), Impact/Effort matrix, scoring rubric |
-| **Export** | Interactive HTML reports, Miro boards, Google Docs, PDF |
-| **Knowledge** | Persistent industry context, session templates, multi-language (PL/EN) |
-| **Notifications** | Slack webhook integration |
+---
 
-## ⚡ Quick Start
+## Quick Start
 
-### 1. Install
+### Option A: Web UI (recommended)
+
+**Requirements:** Python 3.11+, Node.js 18+
 
 ```bash
 git clone https://github.com/Artek338/product-discovery.git
 cd product-discovery
-pip install -e ".[viz]"    # Core + Plotly charts
-# Or install everything:
+
+# 1. Backend
 pip install -e ".[all]"
-```
-
-### 2. Configure
-
-```bash
 cp .env.example .env
-# Required:
-#   ANTHROPIC_API_KEY=sk-ant-...
-# Optional:
-#   MIRO_ACCESS_TOKEN=...
-#   MIRO_BOARD_ID=...
-#   GOOGLE_SERVICE_ACCOUNT_FILE=...
-#   SLACK_WEBHOOK_URL=...
+# Edit .env — add your ANTHROPIC_API_KEY (required)
+
+# 2. Frontend
+cd frontend && npm install && cd ..
+
+# 3. Start both
+./start_dev.sh
 ```
 
-### 3. Verify
+Open **http://localhost:5173** in your browser.
+
+> **Windows:** Run backend and frontend manually if `start_dev.sh` doesn't work:
+> ```bash
+> # Terminal 1
+> uvicorn backend.main:app --reload --port 8001
+> # Terminal 2
+> cd frontend && npm run dev
+> ```
+
+---
+
+### Option B: CLI only
 
 ```bash
-product-discovery --check
+pip install -e ".[all]"
+cp .env.example .env
+# Edit .env — add ANTHROPIC_API_KEY
+
+product-discovery "Your idea" --project my-project
 ```
 
-### 4. Run discovery
+---
 
-```bash
-# Full discovery
-product-discovery "SaaS for freelance UX designers" --project ux-tool --industry saas
+## Configuration
 
-# Using a template
-product-discovery "AI cooking assistant" --project cook-ai --template new_product
-```
+All configuration is done through **Settings** in the Web UI, or by editing `~/.product-discovery/config.json` directly.
 
-## 🏗️ Architecture
+| Setting | Description | Required |
+|---------|-------------|----------|
+| `anthropic_api_key` | Claude API key | **Yes** |
+| `data_dir` | Folder for storing projects and database | No (default: `~/.product-discovery/data`) |
+| `perplexity_api_key` | For competitive research (OSINT) | No |
+| `serper_api_key` | Google search for research | No |
+| `brave_api_key` | Alternative search | No |
+| `miro_access_token` | Miro board export | No |
+| `miro_board_id` | Target Miro board | No |
+| `slack_webhook_url` | Slack notifications | No |
+| `google_client_id` | Google Docs export | No |
+| `google_client_secret` | Google Docs export | No |
 
-```
-Discovery Graph (8 nodes, sequential):
+### Getting API keys
 
-SyntheticInterviewNode → BehavioralInterviewNode → CompetitiveResearchNode
-    → EvidenceGradingNode → ForcesDiagramNode → SynthesisNode
-    → AssumptionMapNode → ScorecardNode → GO/NO-GO/NEEDS_MORE_DATA
-```
+- **Anthropic** (required): [console.anthropic.com](https://console.anthropic.com)
+- **Perplexity**: [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api)
+- **Serper**: [serper.dev](https://serper.dev)
+- **Miro**: [developers.miro.com](https://developers.miro.com/docs/getting-started)
+- **Slack**: Create an Incoming Webhook at [api.slack.com/apps](https://api.slack.com/apps)
 
-## 📁 Project Structure
+---
 
-```
-src/product_discovery/
-├── agents/              # 5 AI agents (pydantic-ai)
-│   ├── business_analyst/  # JTBD, evidence, GO/NO-GO
-│   ├── synthetic_user/    # Archetype generation + interview sim
-│   ├── interview_coach/   # Question validation (Mom Test)
-│   ├── osint_researcher/  # Competitive intelligence
-│   └── product_manager/   # RICE, LNO, feature creep
-├── workflows/           # Discovery graph (pydantic-graph)
-├── tools/               # Domain tools
-│   ├── interview_import.py    # Real interview parsing + NLP
-│   ├── assumption_tracker.py  # Torres taxonomy tracker
-│   ├── industry_context.py    # Persistent industry knowledge
-│   ├── impact_effort.py       # 2×2 solution matrix
-│   └── scoring_rubric.py      # Session quality scoring
-├── visualizations/      # Charts, diagrams, reports
-│   ├── charts.py              # Plotly (5 chart types)
-│   ├── mermaid.py             # Mermaid diagrams (4 types)
-│   ├── report_html.py         # Interactive HTML report
-│   └── report_pdf.py          # PDF export
-├── integrations/        # External services
-│   ├── miro_export.py         # Miro REST API v2
-│   ├── gdocs_export.py        # Google Docs API
-│   └── slack_notify.py        # Slack webhooks
-├── templates/           # Session templates (5 use cases)
-├── strings/             # i18n (PL/EN)
-├── i18n.py              # Translation API
-└── cli.py               # CLI entry point (10 subcommands)
+## Web UI — Features
 
-knowledge_base/          # 6 deep research documents
-docs/                    # Architecture, guides
-```
+### Dashboard
+- List of all discovery sessions with status and GO/NO-GO verdict
+- Session statistics (completion rate, average score)
+- Search and filter
 
-## 🖥️ CLI Reference
+### New Discovery
+Fill in the form and click **Launch Discovery**:
+- **Project name** — used as identifier
+- **Idea** — describe your product idea (1–3 sentences)
+- **Mode** — Auto (full analysis), Problem (validate the pain), Solution (what/how to build)
+- **Notes** — paste raw interview transcripts or market notes
 
-### Discovery
+Discovery runs in the background (~2–5 min with Claude Sonnet). Progress is shown in real time.
 
-```bash
-product-discovery "idea" --project NAME [--industry SLUG] [--template TYPE]
-product-discovery generate-prd --project NAME
-```
+### Report
+After completion, the report includes:
+- **Verdict** — GO / NO-GO / PIVOT with score (0–100)
+- **Jobs-to-be-Done** — what users are actually trying to accomplish
+- **Forces Diagram** — Push/Pull/Anxiety/Habit analysis
+- **Assumptions** — ranked by risk and uncertainty
+- **Competitive Intelligence** — adjacent products and gaps
 
-### Interviews
+**Export options:**
+- PDF — browser print (Ctrl+P → Save as PDF)
+- Miro — exports as structured board
+- Slack — sends summary to your webhook
+- Google Docs — saves report to your Drive
 
-```bash
-product-discovery import-interviews --project NAME --dir ./transcripts/
-product-discovery import-interviews --project NAME --file interview1.md
-```
+### Interview Simulator
+Practice discovery interviews with AI personas:
+1. **Describe your target segment** (e.g. "UX freelancers, 3–10 clients/year, Poland")
+2. **Generate archetypes** — AI creates 4 user personas with psychology, JTBD hypotheses, red flags
+3. **Start interview** — choose an archetype and ask questions
+   - Each response includes: answer, quality rating, hidden thought, follow-up suggestion
 
-### Assumptions
+### Settings
+- Change data folder
+- Add/update API keys
+- Connect Google account (OAuth2)
+- Configure Slack webhook
+- Toggle Mock Mode (fast testing without LLM calls)
 
-```bash
-product-discovery assumptions add --project NAME --hypothesis "Users want X" --type desirability --risk 8 --uncertainty 7
-product-discovery assumptions list --project NAME
-product-discovery assumptions update --project NAME --id A001 --status validated --result "85% confirmed"
-product-discovery assumptions prioritize --project NAME
-product-discovery assumptions stats --project NAME
-```
+---
 
-### Solutions (Impact/Effort)
+## Discovery Modes
 
-```bash
-product-discovery solutions add --project NAME --name "Feature Y" --impact 9 --effort 3
-product-discovery solutions list --project NAME
-product-discovery solutions matrix --project NAME
-```
+| Mode | Use when | Duration |
+|------|----------|----------|
+| **Auto** | You have an idea and want full analysis | ~3–5 min |
+| **Problem** | You want to validate a pain point exists | ~2–3 min |
+| **Solution** | You have a validated problem, want to know what/how to build | ~2–3 min |
 
-### Industry Context
+---
 
-```bash
-product-discovery industry init fintech --name "FinTech"
-product-discovery industry show fintech
-product-discovery industry enrich fintech --project NAME
-product-discovery industry import fintech --file research_notes.md
-product-discovery industry list
-```
-
-### Export & Reports
-
-```bash
-product-discovery export-report --project NAME --theme dark --open
-product-discovery export-miro --project NAME [--sections ost,forces,assumptions]
-product-discovery export-gdocs --project NAME --share-with team@company.com
-```
-
-### Other
-
-```bash
-product-discovery score --project NAME       # Quality score (0-100, grade A+→F)
-product-discovery templates                  # List session templates
-product-discovery --check                    # Verify installation
-product-discovery --version                  # Show version
-```
-
-## 🧪 Evidence Levels
+## Evidence Levels
 
 | Level | Name | Example | Can GO? |
 |-------|------|---------|---------|
-| 0 | Opinion | "I think users would like it" | ❌ |
-| 1 | Preference | "Would you buy this?" → "Yes" | ❌ |
-| 2 | Past Behavior | "Tell me about the LAST time you..." | ⚠️ Min |
-| 3 | Time Commitment | Beta signup, waitlist | ✅ |
-| 4 | Financial | Deposit, preorder | ✅ |
-| 5 | Cash | Paid full price | ✅ |
+| 0 | Opinion | "I think users would like it" | No |
+| 1 | Preference | "Would you buy this?" → "Yes" | No |
+| 2 | Past Behavior | "Tell me about the LAST time you..." | Minimum |
+| 3 | Time Commitment | Beta signup, waitlist | Yes |
+| 4 | Financial | Deposit, preorder | Yes |
+| 5 | Cash | Paid full price | Yes |
 
-## 📦 Optional Dependencies
+---
+
+## CLI Usage
 
 ```bash
-pip install -e ".[viz]"     # Plotly + Kaleido (charts)
-pip install -e ".[miro]"    # Miro API (requests)
-pip install -e ".[gdocs]"   # Google Docs API
-pip install -e ".[docx]"    # .docx interview import
-pip install -e ".[pdf]"     # PDF export (Playwright)
-pip install -e ".[all]"     # Everything
+# Run full discovery
+product-discovery "Your idea description" --project my-project
+
+# Run in specific mode
+product-discovery "Your idea" --mode problem --project my-project
+product-discovery "Your idea" --mode solution --project my-project
+
+# Interview simulator (interactive REPL)
+product-discovery simulate "Target segment description"
+product-discovery simulate "Segment" --archetype 2   # Start with archetype 2
+
+# Verify installation
+product-discovery --check
 ```
 
-## 📖 Methodologies
+---
+
+## Architecture
+
+```
+product-discovery/
+├── backend/          # FastAPI — API, DB, business logic
+│   ├── config.py     # User settings (stored in ~/.product-discovery/config.json)
+│   ├── db.py         # SQLite via aiosqlite
+│   └── routes/       # API endpoints
+├── frontend/         # React 18 + Vite + Tailwind
+│   └── src/
+│       ├── pages/    # Dashboard, NewDiscovery, Report, Simulator, Settings
+│       └── components/
+├── src/product_discovery/   # Core AI engine
+│   ├── workflows/    # LangGraph discovery graph (8 nodes)
+│   └── agents/       # BA, Interview Coach, OSINT, PM, Synthetic User
+└── e2e/              # Playwright E2E tests
+```
+
+### Discovery Graph (8 nodes)
+
+```
+SyntheticInterview → BehavioralInterview → CompetitiveResearch → EvidenceGrading
+→ ForcesDiagram → Synthesis → AssumptionMap → Scorecard → END
+```
+
+---
+
+## Google Docs Setup
+
+To enable Google Docs export:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project
+3. Enable **Google Docs API** and **Google Drive API**
+4. Create OAuth 2.0 credentials (Web Application type)
+5. Add `http://localhost:8001/api/auth/google/callback` as Authorized redirect URI
+6. Copy Client ID and Client Secret to Settings in the app
+
+---
+
+## E2E Tests
+
+```bash
+cd e2e
+npm install
+# Start backend + frontend first (./start_dev.sh)
+npx playwright test              # All tests
+npx playwright test --ui         # Interactive mode
+npx playwright test 01-dashboard # Specific spec
+```
+
+See [e2e/README.md](e2e/README.md) for details.
+
+---
+
+## Methodologies
 
 - **Jobs-to-be-Done** (Tony Ulwick, Bob Moesta)
-- **Forces Diagram** / Switch Interview (Bob Moesta)
+- **Forces Diagram / Switch Interview** (Bob Moesta)
 - **Continuous Discovery Habits** (Teresa Torres)
 - **Mom Test** (Rob Fitzpatrick)
 - **Opportunity Solution Trees** (Teresa Torres)
 - **RICE Prioritization** (Intercom)
-- **DHM Model** (Gibson Biddle, Netflix)
-- **Pre-Mortem** (Shreyas Doshi)
+- **DHM Model** (Gibson Biddle)
 
-## 🧪 Testing
+---
 
-```bash
-pytest tests/ -v           # All tests
-pytest tests/ -m integration  # Integration only (needs API keys)
-```
-
-## 📄 License
+## License
 
 MIT License — see [LICENSE](LICENSE)

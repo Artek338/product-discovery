@@ -1,0 +1,20 @@
+{
+  "name": "product-discovery-e2e",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:dashboard": "playwright test specs/01-dashboard",
+    "test:new-discovery": "playwright test specs/02-new-discovery",
+    "test:report": "playwright test specs/03-report",
+    "test:simulator": "playwright test specs/04-simulator",
+    "test:settings": "playwright test specs/05-settings",
+    "test:integration": "playwright test specs/06-integration",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0"
+  }
+}

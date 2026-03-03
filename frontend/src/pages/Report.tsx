@@ -11,7 +11,7 @@ import AssumptionTable from '../components/AssumptionTable'
 import ArchetypeCard from '../components/ArchetypeCard'
 import MiroExportModal from '../components/MiroExportModal'
 import type { DiscoveryResult, SyntheticProfile } from '../types/discovery'
-import { FileText, Download, Share2, Target, Users, Zap, Map, FileSearch } from 'lucide-react'
+import { FileText, Download, Share2, Target, Users, Zap, Map, FileSearch, Slack, RefreshCw, CheckCircle2, AlertCircle } from 'lucide-react'
 
 function parseArchetypes(raw: string): SyntheticProfile[] {
   if (!raw) return []
@@ -83,11 +83,14 @@ export default function Report() {
     discoveryResult, setDiscoveryResult,
   } = useAppStore()
 
+  const [pollError, setPollError] = useState('')
+
   const poll = useCallback(async () => {
     if (!id) return
     try {
       const status = await api.getStatus(id)
       setSessionStatus(status)
+      setPollError('')
 
       if (status.status === 'completed') {
         const result = await api.getResult(id)
@@ -95,8 +98,10 @@ export default function Report() {
       } else if (status.status === 'running' || status.status === 'queued') {
         setTimeout(poll, 2000)
       }
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('Poll error:', err)
+      const msg = err instanceof Error ? err.message : 'API Error'
+      setPollError(msg.includes('404') ? 'Session not found (404)' : msg)
     }
   }, [id, setSessionStatus, setDiscoveryResult])
 
@@ -106,6 +111,48 @@ export default function Report() {
   }, [id, poll])
 
   const [miroOpen, setMiroOpen] = useState(false)
+
+  // Slack export state
+  const [slackSending, setSlackSending] = useState(false)
+  const [slackResult, setSlackResult] = useState<{ sent: boolean; message: string } | null>(null)
+
+  // Google Docs export state
+  const [gdocsSending, setGdocsSending] = useState(false)
+  const [gdocsResult, setGdocsResult] = useState<{ doc_url: string } | null>(null)
+  const [gdocsError, setGdocsError] = useState('')
+
+  const handleSlackSend = async () => {
+    if (!id) return
+    setSlackSending(true)
+    setSlackResult(null)
+    try {
+      const res = await api.exportSlack(id, {
+        report_url: window.location.href,
+        event: 'discovery_complete',
+      })
+      setSlackResult({ sent: res.sent, message: res.message })
+    } catch (e: unknown) {
+      setSlackResult({ sent: false, message: e instanceof Error ? e.message : 'Błąd wysyłania' })
+    } finally {
+      setSlackSending(false)
+      setTimeout(() => setSlackResult(null), 5000)
+    }
+  }
+
+  const handleGdocsExport = async () => {
+    if (!id) return
+    setGdocsSending(true)
+    setGdocsResult(null)
+    setGdocsError('')
+    try {
+      const res = await api.exportGDocs(id, { share_with: [] })
+      setGdocsResult({ doc_url: res.doc_url })
+    } catch (e: unknown) {
+      setGdocsError(e instanceof Error ? e.message : 'Błąd eksportu')
+    } finally {
+      setGdocsSending(false)
+    }
+  }
 
   const isRunning = sessionStatus?.status === 'running' || sessionStatus?.status === 'queued'
   const result = discoveryResult
@@ -159,6 +206,20 @@ export default function Report() {
         </div>
       )}
 
+      {pollError && (
+        <div className="bg-[#FEE2E2] rounded-2xl p-8 border border-[#FCA5A5] mb-8 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+          </div>
+          <div>
+            <h2 className="font-sans font-bold text-lg text-[#DC2626]">Error</h2>
+            <p className="font-sans text-sm text-[#991B1B] mt-1.5 leading-relaxed max-w-2xl">
+              {pollError}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Full report */}
       {result && result.jtbd && (
         <div className="space-y-8">
@@ -182,7 +243,7 @@ export default function Report() {
               <div className="flex items-center gap-4">
                 <VerdictBadge verdict={result.jtbd.verdict} size="lg" />
                 <div className="h-10 w-px bg-[#E2E8F0] mx-2 hidden sm:block"></div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <a
                     href={api.exportPdfUrl(result.session_id)}
                     target="_blank"
@@ -197,9 +258,65 @@ export default function Report() {
                     className="px-4 py-2 bg-[#14B8A6] shadow-sm rounded-lg text-sm font-sans font-semibold text-white hover:bg-[#0D9488] transition-colors flex items-center gap-2"
                   >
                     <Share2 size={16} />
-                    Send to Miro
+                    Miro
+                  </button>
+                  {/* Slack */}
+                  <button
+                    onClick={handleSlackSend}
+                    disabled={slackSending}
+                    title="Wyślij powiadomienie do Slacka"
+                    className={`px-4 py-2 shadow-sm rounded-lg text-sm font-sans font-semibold transition-colors flex items-center gap-2 ${slackResult?.sent
+                        ? 'bg-emerald-500 text-white'
+                        : slackResult && !slackResult.sent
+                          ? 'bg-red-100 text-red-700 border border-red-300'
+                          : 'bg-white border border-[#E2E8F0] text-[#0D2535] hover:bg-slate-50'
+                      }`}
+                  >
+                    {slackSending
+                      ? <RefreshCw size={16} className="animate-spin" />
+                      : slackResult?.sent
+                        ? <CheckCircle2 size={16} />
+                        : slackResult && !slackResult.sent
+                          ? <AlertCircle size={16} />
+                          : <Slack size={16} className="text-[#611f69]" />
+                    }
+                    {slackResult ? slackResult.sent ? 'Wysłano!' : 'Błąd' : 'Slack'}
+                  </button>
+                  {/* Google Docs */}
+                  <button
+                    onClick={handleGdocsExport}
+                    disabled={gdocsSending}
+                    title="Eksportuj do Google Docs"
+                    className={`px-4 py-2 shadow-sm rounded-lg text-sm font-sans font-semibold transition-colors flex items-center gap-2 ${gdocsResult
+                        ? 'bg-blue-500 text-white'
+                        : 'bg-white border border-[#E2E8F0] text-[#0D2535] hover:bg-slate-50'
+                      }`}
+                  >
+                    {gdocsSending
+                      ? <RefreshCw size={16} className="animate-spin" />
+                      : gdocsResult
+                        ? <CheckCircle2 size={16} />
+                        : <FileText size={16} className="text-[#4285F4]" />
+                    }
+                    {gdocsResult ? 'Otwórz Docs' : 'Google Docs'}
                   </button>
                 </div>
+                {/* Linki po eksporcie */}
+                {gdocsResult && (
+                  <div className="mt-2 flex justify-end">
+                    <a
+                      href={gdocsResult.doc_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-blue-600 hover:underline font-sans flex items-center gap-1"
+                    >
+                      <FileText size={12} /> Otwórz dokument Google Docs
+                    </a>
+                  </div>
+                )}
+                {gdocsError && (
+                  <p className="mt-2 text-xs text-red-500 font-sans text-right">{gdocsError}</p>
+                )}
               </div>
             </div>
 

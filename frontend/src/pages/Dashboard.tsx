@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { Plus, MoreHorizontal, Filter, Download, Search } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAppStore } from '../store/appStore'
@@ -14,6 +14,8 @@ const STATUS_BADGE: Record<string, string> = {
 
 export default function Dashboard() {
   const { projects, setProjects, language } = useAppStore()
+  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     api.getProjects().then(setProjects).catch(console.error)
@@ -32,6 +34,10 @@ export default function Dashboard() {
   const failedCount = projects.filter(p => p.status === 'failed').length
   const successRate = projects.length > 0 ? Math.round((completedCount / projects.length) * 100) : 0
 
+  const filteredProjects = projects.filter(p =>
+    p.project_name?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
   // Confidence breakdown (tylko ukończone z weryfiktem)
   const withVerdict = projects.filter(p => p.verdict)
   const goCount = withVerdict.filter(p => p.verdict === 'GO').length
@@ -48,12 +54,12 @@ export default function Dashboard() {
   const circleOffset = (pct: number) => circ - (pct / 100) * circ
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto overflow-hidden">
       {/* Top Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Discovery overview */}
         <div
-          className="col-span-1 rounded-2xl p-6 flex flex-col justify-between"
+          className="col-span-1 rounded-2xl p-4 md:p-6 flex flex-col justify-between"
           style={{ backgroundColor: '#0D2535' }}
         >
           <div>
@@ -89,6 +95,8 @@ export default function Dashboard() {
               <Search size={16} className="text-slate-400" />
               <input
                 type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t(language, 'search_ph')}
                 className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-slate-400"
               />
@@ -107,11 +115,11 @@ export default function Dashboard() {
             </button>
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             {/* Donut chart — rzeczywiste dane */}
             {projects.length > 0 ? (
               <div
-                className="relative w-28 h-28 rounded-full"
+                className="relative w-28 h-28 rounded-full shrink-0"
                 style={{
                   background: `conic-gradient(
                     #0D2535 0% ${(completedCount / projects.length) * 100}%,
@@ -124,7 +132,7 @@ export default function Dashboard() {
               </div>
             ) : (
               <div
-                className="relative w-28 h-28 rounded-full"
+                className="relative w-28 h-28 rounded-full shrink-0"
                 style={{ background: '#F1F5F9' }}
               >
                 <div className="absolute inset-0 m-auto w-16 h-16 bg-white rounded-full" />
@@ -228,11 +236,11 @@ export default function Dashboard() {
 
       {/* Projects Table */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <h3 className="font-sans font-semibold text-[#0D2535] text-lg">
             {t(language, 'dash_table_title')}
           </h3>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3">
             <Link
               to="/discovery/new"
               className="flex items-center gap-2 text-sm font-sans font-semibold text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
@@ -280,7 +288,7 @@ export default function Dashboard() {
               </tr>
             </thead>
             <tbody>
-              {projects.length === 0 ? (
+              {filteredProjects.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-10 text-center text-slate-400 text-sm font-sans">
                     {t(language, 'dash_empty')}{' '}
@@ -289,10 +297,11 @@ export default function Dashboard() {
                     </Link>
                   </td>
                 </tr>
-              ) : projects.map((p, idx) => (
+              ) : filteredProjects.map((p, idx) => (
                 <tr
                   key={p.session_id}
-                  className="border-b border-[#F1F5F9] last:border-0 hover:bg-slate-50 transition-colors"
+                  onClick={() => navigate(`/discovery/${p.session_id}`)}
+                  className="border-b border-[#F1F5F9] last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"
                 >
                   <td className="py-4 px-4">
                     <div className="flex items-center gap-3 text-sm text-slate-500">

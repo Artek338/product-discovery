@@ -6,15 +6,22 @@
   body {
     background-color: #EFF2F7;
     color: #0D2535;
+    overflow-x: hidden;
     @apply antialiased font-sans;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-mono;
   }
 }
 
 @layer components {
+
   /* ── Karty ── */
   .card {
     @apply bg-[#FFFFFF] rounded-[12px] border border-[#E2E8F0];
@@ -22,87 +29,57 @@
 
   /* ── Przyciski ── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2
-           bg-[#14B8A6] text-[#FFFFFF] px-5 py-[10px] rounded-[8px]
-           text-sm font-semibold font-sans
-           hover:bg-[#2DD4BF] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]
-           disabled:bg-[#E2E8F0] disabled:text-[#94A3B8] disabled:cursor-not-allowed
-           transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-[#14B8A6] text-[#FFFFFF] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#2DD4BF] focus:outline-none focus:ring-2 focus:ring-[#14B8A6] disabled:bg-[#E2E8F0] disabled:text-[#94A3B8] disabled:cursor-not-allowed transition-colors;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2
-           bg-[#FFFFFF] text-[#14B8A6] px-5 py-[9px] rounded-[8px]
-           text-sm font-semibold font-sans border border-[#14B8A6]
-           hover:bg-[#CCFBF1] focus:outline-none focus:ring-2 focus:ring-[#14B8A6]
-           transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-[#FFFFFF] text-[#14B8A6] px-5 py-[9px] rounded-[8px] text-sm font-semibold font-sans border border-[#14B8A6] hover:bg-[#CCFBF1] focus:outline-none focus:ring-2 focus:ring-[#14B8A6] transition-colors;
   }
 
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2
-           bg-[#CCFBF1] text-[#0D9488] px-5 py-[10px] rounded-[8px]
-           text-sm font-semibold font-sans
-           hover:bg-[#14B8A6] hover:text-[#FFFFFF] focus:outline-none
-           transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-[#CCFBF1] text-[#0D9488] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#14B8A6] hover:text-[#FFFFFF] focus:outline-none transition-colors;
   }
 
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2
-           bg-[#EF4444] text-[#FFFFFF] px-5 py-[10px] rounded-[8px]
-           text-sm font-semibold font-sans
-           hover:bg-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#EF4444]
-           transition-colors;
+    @apply inline-flex items-center justify-center gap-2 bg-[#EF4444] text-[#FFFFFF] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#EF4444] transition-colors;
   }
 
   /* ── Pola formularzy ── */
   .input {
-    @apply w-full rounded-[8px] border border-[#E2E8F0] px-[14px] py-[10px]
-           text-sm font-sans text-[#0D2535] bg-[#FFFFFF]
-           placeholder:text-[#94A3B8]
-           focus:outline-none focus:ring-2 focus:ring-[#14B8A6] focus:border-[#14B8A6] focus:bg-[#F0FDFA]
-           disabled:bg-[#F8FAFC] disabled:text-[#94A3B8] disabled:border-[#E2E8F0]
-           transition-colors;
+    @apply w-full rounded-[8px] border border-[#E2E8F0] px-[14px] py-[10px] text-sm font-sans text-[#0D2535] bg-[#FFFFFF] placeholder:text-[#94A3B8] focus:outline-none focus:ring-2 focus:ring-[#14B8A6] focus:border-[#14B8A6] focus:bg-[#F0FDFA] disabled:bg-[#F8FAFC] disabled:text-[#94A3B8] disabled:border-[#E2E8F0] transition-colors;
   }
 
   /* ── Badge'y trybów Discovery ── */
   .badge-mode-auto {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#EDE9FE] text-[#8B5CF6] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EDE9FE] text-[#8B5CF6] text-xs font-semibold font-sans;
   }
 
   .badge-mode-problem {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#FFF7ED] text-[#F97316] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF7ED] text-[#F97316] text-xs font-semibold font-sans;
   }
 
   .badge-mode-solution {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#F0FDFA] text-[#0D9488] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F0FDFA] text-[#0D9488] text-xs font-semibold font-sans;
   }
 
   .badge-mode-simulate {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#EFF6FF] text-[#3B82F6] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EFF6FF] text-[#3B82F6] text-xs font-semibold font-sans;
   }
 
   /* ── Badge'y statusów sesji ── */
   .badge-status-running {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#DCFCE7] text-[#15803D] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-xs font-semibold font-sans;
   }
 
   .badge-status-completed {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#F1F5F9] text-[#475569] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F1F5F9] text-[#475569] text-xs font-semibold font-sans;
   }
 
   .badge-status-failed {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold font-sans;
   }
 
   .badge-status-queued {
-    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full
-           bg-[#FEF3C7] text-[#B45309] text-xs font-semibold font-sans;
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-xs font-semibold font-sans;
   }
 }

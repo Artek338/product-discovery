@@ -138,6 +138,22 @@ async def _run_discovery_task(
         await save_result(session_id, json.dumps(result_data))
         await update_session_status(session_id, "completed", progress=8, log_entry="Discovery completed")
 
+        # Auto-notify Slack jeśli skonfigurowane
+        from backend.config import get as cfg_get
+        if cfg_get("slack_auto_notify") and cfg_get("slack_webhook_url"):
+            try:
+                from product_discovery.integrations.slack_notify import send_slack_notification
+                from backend.routes.export import _session_to_discovery_data
+                slack_data = _session_to_discovery_data(result_data)
+                send_slack_notification(
+                    webhook_url=cfg_get("slack_webhook_url"),
+                    project_name=project_name,
+                    event="discovery_complete",
+                    discovery_data=slack_data,
+                )
+            except Exception:
+                pass  # Auto-notify nie może blokować głównego flow
+
     except Exception as e:
         await update_session_status(
             session_id, "failed", log_entry=f"Error: {str(e)}"
