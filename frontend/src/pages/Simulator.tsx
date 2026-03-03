@@ -22,9 +22,9 @@ export default function Simulator() {
   } = useAppStore()
 
   const STEPS = [
-    { id: 'input',      label: t(language, 'sim_step1_label') },
+    { id: 'input', label: t(language, 'sim_step1_label') },
     { id: 'archetypes', label: t(language, 'sim_step2_label') },
-    { id: 'chat',       label: t(language, 'sim_step3_label') },
+    { id: 'chat', label: t(language, 'sim_step3_label') },
   ]
 
   const handleGenerateArchetypes = async () => {
@@ -62,7 +62,7 @@ export default function Simulator() {
         <h1 className="text-2xl font-sans font-semibold text-[#0D2535] mb-2">
           {t(language, 'sim_title')}
         </h1>
-        <p className="text-slate-500 font-sans text-sm">
+        <p className="text-slate-500 font-sans text-sm max-w-2xl">
           {t(language, 'sim_desc')}
         </p>
       </div>
@@ -83,13 +83,12 @@ export default function Simulator() {
             return (
               <div key={s.id} className="flex flex-col items-center bg-[#F8FAFC] px-4 -ml-4 first:ml-0">
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${
-                    isCompleted
-                      ? 'bg-[#14B8A6] text-white'
-                      : isCurrent
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-colors ${isCompleted
+                    ? 'bg-[#14B8A6] text-white'
+                    : isCurrent
                       ? 'bg-white border-2 border-[#14B8A6] text-[#14B8A6]'
                       : 'bg-white border-2 border-[#E2E8F0] text-slate-400'
-                  }`}
+                    }`}
                 >
                   {isCompleted ? <Check size={16} strokeWidth={3} /> : idx + 1}
                 </div>

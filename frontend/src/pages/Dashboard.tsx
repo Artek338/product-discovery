@@ -6,10 +6,10 @@ import { useAppStore } from '../store/appStore'
 import { t } from '../lib/i18n'
 
 const STATUS_BADGE: Record<string, string> = {
-  queued:    'text-[#F59E0B] bg-[#FEF3C7]',
-  running:   'text-[#10B981] bg-[#D1FAE5]',
+  queued: 'text-[#F59E0B] bg-[#FEF3C7]',
+  running: 'text-[#10B981] bg-[#D1FAE5]',
   completed: 'text-[#14B8A6] bg-[#CCFBF1]',
-  failed:    'text-[#EF4444] bg-[#FEE2E2]',
+  failed: 'text-[#EF4444] bg-[#FEE2E2]',
 }
 
 export default function Dashboard() {
@@ -34,14 +34,14 @@ export default function Dashboard() {
 
   // Confidence breakdown (tylko ukończone z weryfiktem)
   const withVerdict = projects.filter(p => p.verdict)
-  const goCount   = withVerdict.filter(p => p.verdict === 'GO').length
+  const goCount = withVerdict.filter(p => p.verdict === 'GO').length
   const needsCount = withVerdict.filter(p => p.verdict === 'NEEDS_MORE_DATA').length
   const nogoCount = withVerdict.filter(p => p.verdict === 'NO-GO').length
   const total = withVerdict.length || 1
 
-  const goPct    = Math.round((goCount / total) * 100)
+  const goPct = Math.round((goCount / total) * 100)
   const needsPct = Math.round((needsCount / total) * 100)
-  const nogoPct  = Math.round((nogoCount / total) * 100)
+  const nogoPct = Math.round((nogoCount / total) * 100)
 
   // SVG circle helpers (r=40, circumference ≈ 251)
   const circ = 251
@@ -253,7 +253,7 @@ export default function Dashboard() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-[#E2E8F0]">
                 <th className="py-4 px-4 text-xs font-semibold text-slate-400 font-sans tracking-wide">

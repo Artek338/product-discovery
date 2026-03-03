@@ -33,7 +33,7 @@ export default function ArchetypeCard({ profile, selected, onClick, compact }: P
     return (
       <button
         onClick={onClick}
-        className={`w-full text-left p-4 rounded-xl border-2 transition-all ${selected
+        className={`w-full p-4 rounded-xl border-2 transition-all ${selected
           ? 'border-[#14B8A6] bg-[#F0FDFA] shadow-sm'
           : 'border-[#E2E8F0] bg-white hover:border-[#2DD4BF] hover:shadow-sm'
           }`}

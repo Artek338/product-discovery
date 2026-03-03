@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, ExternalLink, Layers } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, ExternalLink, Layers, FlaskConical } from 'lucide-react'
 import { api } from '../lib/api'
 
 interface Props {
@@ -21,6 +21,19 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<ExportResult | null>(null)
   const [error, setError] = useState('')
+  const firstInputRef = useRef<HTMLInputElement>(null)
+
+  // Accessibility: Focus Trap / Escape listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    if (firstInputRef.current && !dryRun) {
+      firstInputRef.current.focus()
+    }
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [onClose, dryRun])
 
   const handleExport = async () => {
     setLoading(true)
@@ -62,26 +75,32 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
 
         <div className="p-6 space-y-4">
           {/* Dry-run toggle */}
-          <div
-            className="flex items-start gap-3 p-3 rounded-[8px] cursor-pointer"
-            style={{ backgroundColor: dryRun ? '#F0FDFA' : '#F8FAFC', border: `1px solid ${dryRun ? '#14B8A6' : '#E2E8F0'}` }}
-            onClick={() => setDryRun(v => !v)}
-          >
-            <div
-              className="w-4 h-4 rounded mt-0.5 shrink-0 flex items-center justify-center border-2 transition-colors"
-              style={{
-                borderColor: dryRun ? '#14B8A6' : '#CBD5E1',
-                backgroundColor: dryRun ? '#14B8A6' : 'white',
-              }}
-            >
-              {dryRun && <span className="text-white text-[10px] font-bold">✓</span>}
-            </div>
+          <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-4">
             <div>
-              <p className="text-sm font-sans font-semibold text-[#0D2535]">Tryb testowy (dry run)</p>
-              <p className="text-xs text-slate-400 font-sans mt-0.5">
-                Symuluje eksport bez konta Miro — zero wywołań API. Zobaczysz log co zostanie stworzone.
+              <div className="flex items-center gap-2 mb-1">
+                <FlaskConical size={16} className="text-[#14B8A6]" />
+                <p className="text-sm font-sans font-semibold text-[#0D2535]">Tryb testowy (dry run)</p>
+              </div>
+              <p className="text-xs text-slate-500 font-sans leading-relaxed pr-4">
+                Symuluje eksport bez konta Miro — zero wywołań API.<br />Zobaczysz log systemowy.
               </p>
             </div>
+
+            <button
+              type="button"
+              role="switch"
+              aria-checked={dryRun}
+              onClick={() => setDryRun(!dryRun)}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-2 ${dryRun ? 'bg-[#14B8A6]' : 'bg-slate-200'
+                }`}
+            >
+              <span className="sr-only">Włącz tryb testowy</span>
+              <span
+                aria-hidden="true"
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${dryRun ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+              />
+            </button>
           </div>
 
           {/* Token i Board ID */}
@@ -97,6 +116,7 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
                 placeholder="eyJhbGciOi..."
                 className="input"
                 disabled={dryRun}
+                ref={firstInputRef}
               />
               <p className="text-xs text-slate-400 font-sans mt-1">
                 Miro → Profile → Apps → Your apps → Token
@@ -174,24 +194,24 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
           )}
 
           {/* Akcje */}
-          <div className="flex gap-3 pt-1">
+          <div className="flex gap-3 pt-4 justify-end border-t border-[#E2E8F0]">
+            <button onClick={onClose} className="btn-secondary px-6">
+              Zamknij
+            </button>
             <button
               onClick={handleExport}
               disabled={loading || (!dryRun && (!token || !boardId))}
-              className="btn-primary flex-1"
+              className="btn-primary px-8"
             >
               {loading ? (
                 <span className="flex items-center gap-2">
                   <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                   </svg>
                   {dryRun ? 'Symulowanie...' : 'Eksportowanie...'}
                 </span>
               ) : dryRun ? 'Testuj (dry run)' : 'Eksportuj do Miro'}
-            </button>
-            <button onClick={onClose} className="btn-secondary">
-              Zamknij
             </button>
           </div>
         </div>

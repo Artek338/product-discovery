@@ -165,7 +165,7 @@ export default function Report() {
           {/* Header & Metrics block */}
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E2E8F0]">
             <div className="flex items-start justify-between gap-6 flex-wrap mb-8">
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-12 h-12 rounded-xl bg-[#0D2535] text-white flex items-center justify-center shadow-md">
                     <Target size={24} strokeWidth={1.5} />
