@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from backend.config import load_config
 from backend.db import init_db
-from backend.routes import auth, discovery, export, projects, settings, simulator
+from backend.routes import agents, auth, discovery, export, projects, settings, simulator
 
 
 @asynccontextmanager
@@ -56,6 +56,7 @@ app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
 app.include_router(export.router, prefix="/api/export", tags=["export"])
 app.include_router(settings.router, prefix="/api/settings", tags=["settings"])
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(agents.router, prefix="/api/agents", tags=["agents"])
 
 
 @app.get("/api/health")
