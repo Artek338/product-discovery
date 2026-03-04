@@ -22,12 +22,17 @@ from product_discovery.agents.business_analyst.schemas import (
     SyntheticUserResponse,
 )
 
+_AGENT_DIR = Path(__file__).parent
+_AGENT_MD_PATH = _AGENT_DIR / "AGENT.md"
 
 # ============================================================================
-# System Prompt
+# System Prompt — loaded from AGENT.md
 # ============================================================================
 
-_SYSTEM_PROMPT = """
+if _AGENT_MD_PATH.exists() and _AGENT_MD_PATH.stat().st_size > 10:
+    _SYSTEM_PROMPT = _AGENT_MD_PATH.read_text(encoding="utf-8")
+else:
+    _SYSTEM_PROMPT = """
 Jesteś ekspertem ds. psychologii użytkownika i badań UX z 15-letnim doświadczeniem
 w tworzeniu wiarygodnych, szczegółowych archetypów użytkowników.
 

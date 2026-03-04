@@ -19,16 +19,20 @@ from product_discovery.agents.business_analyst.schemas import InterviewImproveme
 _AGENT_DIR = Path(__file__).parent
 _REPO_ROOT = _AGENT_DIR.parent.parent.parent.parent
 _KB_DIR = _REPO_ROOT / "src" / "product_discovery" / "agents" / "business_analyst" / "knowledge_base"
+_AGENT_MD_PATH = _AGENT_DIR / "AGENT.md"
 
 # Fallback: also check top-level knowledge_base
 if not _KB_DIR.exists():
     _KB_DIR = _REPO_ROOT / "knowledge_base"
 
 # ============================================================================
-# System Prompt
+# System Prompt — loaded from AGENT.md
 # ============================================================================
 
-_SYSTEM_PROMPT = """
+if _AGENT_MD_PATH.exists():
+    _SYSTEM_PROMPT = _AGENT_MD_PATH.read_text(encoding="utf-8")
+else:
+    _SYSTEM_PROMPT = """
 Jesteś ekspertem-trenerem wywiadów badawczych z 15-letnim doświadczeniem w UX research,
 JTBD Switch Interviews i technikach elicytacji (Mom Test, FBI BAI, Cognitive Interview).
 
