@@ -79,6 +79,41 @@ Effort:     person-months (1 dev, 1 miesiąc = 1)
 **RICE 1.0-5.0** → Neutral — oceń strategicznie
 **RICE > 5.0** → Leverage — priorytet
 
+### RICE Calibration Guardrails
+
+**Reach — jak mierzyć:**
+- Preferuj: MAU (Monthly Active Users) lub Sessions, nie "registered users"
+- Revenue-at-risk: ile $ARR tracisz jeśli NIE zrobisz? (lepszy argument niż gain)
+- Jeśli nie masz danych → szacuj z historycznych kohort i zaznacz `[SZACUNEK ±50%]`
+- ⚠️ Pułapka: "100k userów" vs "100k którzy DOTKNĄ tej ścieżki" — licz drugą grupę
+
+**Confidence — zasady kalibracji:**
+- ≤ 20% → jesteś w trybie hipotezy, brak MVP data
+- 50% → masz sygnały (wywiady, beta feedback) ale nie dane ilościowe
+- 80% → masz dane z produkcji (A/B test, actual usage metrics)
+- **ZASADA: Confidence nigdy > 80% bez danych z działającego MVP/produkcji**
+- ⚠️ Najczęstszy błąd PM: zawyżanie Confidence z powodu "głębokiego przekonania"
+
+**Impact — kalibracja przez analogię:**
+- Użyj historycznych featureów z podobną mechaniką jako benchmark
+- "Ten feature jest podobny do X który dał +15% retention" → Impact=2 (high)
+- Bez analogii → max Impact=1 (medium), dopóki nie ma danych
+
+**Effort — anti-pattern:**
+- Nie licz "idealnego" effort — zawsze dodaj 40% na integracje, code review, edge cases
+- "Sprint" ≠ miesięczny effort — developer pracuje efektywnie ~60% czasu
+
+**Tigers vs Paper Tigers w RICE:**
+```
+Tiger (realny bloker RICE):
+  - Reach = 0 bo segment nie istnieje w naszej bazie → DEFER
+  - Effort podwojony przez dług techniczny → RICE spada poniżej 1.0
+
+Paper Tiger (nie psuje RICE):
+  - "Trudno zmierzyć Reach" → szacuj z marginesem błędu
+  - "Może za drogie" → sprawdź revenue-at-risk, RICE może być >5.0
+```
+
 ---
 
 ## LNO — klasyfikacja pracy

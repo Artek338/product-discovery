@@ -17,7 +17,7 @@ const NODES = [
 
 export default function ProgressTracker({ progress, currentNode, logs = [] }: Props) {
   return (
-    <div className="space-y-5">
+    <div data-testid="progress-tracker" className="space-y-5">
       <div className="space-y-1.5">
         {NODES.map((node) => {
           const done = progress >= node.step
@@ -25,6 +25,9 @@ export default function ProgressTracker({ progress, currentNode, logs = [] }: Pr
           return (
             <div
               key={node.key}
+              data-testid="progress-node"
+              data-node={node.key}
+              data-status={active ? 'active' : done ? 'done' : 'pending'}
               className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 active
                   ? 'border border-teal-500 bg-[#F0FDFA]'

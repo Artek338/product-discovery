@@ -77,7 +77,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#F8FAFC]">
+    <div data-testid="simulator-chat" className="flex flex-col h-full bg-[#F8FAFC]">
       {/* Nagłówek */}
       <div className="px-6 py-4 border-b border-[#E2E8F0] bg-white rounded-t-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] z-10">
         <div className="flex items-center gap-3">
@@ -111,7 +111,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
         )}
 
         {messages.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div key={idx} data-testid="chat-message" data-role={msg.role} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`flex flex-col max-w-[85%] ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
 
               <div className="flex items-end gap-2 mb-1.5">
@@ -208,6 +208,7 @@ export default function SimulatorChat({ archetype, messages, onMessage }: Props)
       <div className="p-4 border-t border-[#E2E8F0] bg-white rounded-b-2xl z-10">
         <div className="flex gap-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-1.5 focus-within:border-[#14B8A6] focus-within:ring-1 focus-within:ring-[#14B8A6] transition-all">
           <input
+            data-testid="chat-input"
             type="text"
             value={input}
             onChange={e => setInput(e.target.value)}
