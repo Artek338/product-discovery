@@ -68,6 +68,8 @@ class DiscoveryResultResponse(BaseModel):
 
 class ArchetypesRequest(BaseModel):
     segment: str
+    count: int = 4
+    market_type: str = "Mixed"  # B2C | B2B | SaaS | Enterprise | Mixed
 
 
 class SyntheticProfileResponse(BaseModel):

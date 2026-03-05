@@ -53,10 +53,14 @@ export const api = {
 
   // ============ Simulator ============
 
-  generateArchetypes: (segment: string): Promise<SyntheticProfile[]> =>
+  generateArchetypes: (
+    segment: string,
+    count?: number,
+    market_type?: string,
+  ): Promise<SyntheticProfile[]> =>
     request('/simulator/archetypes', {
       method: 'POST',
-      body: JSON.stringify({ segment }),
+      body: JSON.stringify({ segment, count: count ?? 4, market_type: market_type ?? 'Mixed' }),
     }),
 
   askQuestion: (body: SimulatorQuestionRequest): Promise<SimulatorAnswer> =>
