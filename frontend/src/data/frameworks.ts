@@ -2,7 +2,7 @@ export type AiAutomation = 'yes' | 'partial' | 'no'
 
 export interface Framework {
     id: string
-    category: 'cycle' | 'problem' | 'validation' | 'market' | 'artifact'
+    category: 'cycle' | 'problem' | 'validation' | 'market' | 'artifact' | 'prioritization' | 'metrics'
     name: string
     shortName?: string
     author: string
@@ -465,6 +465,286 @@ export const FRAMEWORKS: Framework[] = [
             'SaaS App — dekompozycja skomplikowanego onboardingu na małe etapy rozwijane iteracyjnie'
         ]
     },
+    // ── Priorytetyzacja ───────────────────────────────────────────────────────
+    {
+        id: 'moscow',
+        category: 'prioritization',
+        name: 'MoSCoW Method',
+        author: 'Dai Clegg / DSDM Consortium (1994)',
+        assumption: 'Nie wszystkie wymagania mają równą wartość. Podział na Must/Should/Could/Won\'t pozwala w 30 minut uzgodnić zakres MVP bez wielogodzinnych negocjacji.',
+        phases: [
+            'Must Have — krytyczne, bez nich produkt nie działa lub nie spełnia wymogów prawnych. Maksymalnie 60% pracy w iteracji.',
+            'Should Have — ważne, ale da się bez nich żyć do następnego release. Dostarczyć jeśli czas pozwoli.',
+            'Could Have — nice-to-have, pierwsze do odcięcia gdy pojawi się presja czasowa.',
+            'Won\'t Have (this time) — explicite odrzucone NA TEN CYKL. "Parking lot" — wrócimy do nich.',
+        ],
+        artifacts: ['MoSCoW Backlog', 'Release Scope Agreement', 'Won\'t List (Parking Lot)'],
+        whenToUse: 'Planowanie zakresu MVP, negocjowanie sprint scope ze stakeholderami, kick-off projektu gdy wszyscy chcą wszystkiego.',
+        limitations: 'Silnie subiektywne — bez procesu każdy stakeholder upycha swoje potrzeby w "Must". Nie uwzględnia kosztu realizacji. Ryzyko "scope creep" gdy "Could Have" lista rośnie.',
+        aiAutomation: 'partial',
+        complexity: 1,
+        cycleDuration: 'godziny–dni',
+        examples: [
+            'Fintech MVP — Must: przelew, logowanie, saldo. Should: historia. Could: dark mode. Won\'t: kryptowaluty.',
+            'Sprint planning — PM prowadzi sesję 30 min z 5 stakeholderami, wspólnie kategoryzują 20 ticketów.',
+            'E-commerce — Must: koszyk + płatność. Could: wishlist, recenzje, rekomendacje → Release 2.',
+        ]
+    },
+    {
+        id: 'rice',
+        category: 'prioritization',
+        name: 'RICE Score',
+        shortName: 'RICE',
+        author: 'Intercom — Sean McBride (2016)',
+        assumption: 'Reach × Impact × Confidence / Effort daje porównywalną liczbę dla każdej inicjatywy, eliminując "HiPPO Effect" (Highest Paid Person\'s Opinion) z priorytetyzacji.',
+        phases: [
+            'Reach — ile userów dotknie w ciągu kwartału? Licz MAU/sessions, nie "registered users". Preferuj revenue-at-risk gdy brak danych.',
+            'Impact — jak mocno zmienia key metric? Skala: 0.25=minimal / 0.5=low / 1=medium / 2=high / 3=massive.',
+            'Confidence — jak pewny jesteś szacunków? 20%=hipoteza / 50%=sygnały z wywiadów / 80%=dane z produkcji. NIGDY powyżej 80% bez danych z działającego MVP.',
+            'Effort — person-months. Zawsze dodaj +40% na code review, integracje, edge cases.',
+            'RICE = (R × I × C) / E → sortuj backlog malejąco. RICE <1.0: odrzuć. 1–5: oceń strategicznie. >5: priorytet.',
+        ],
+        artifacts: ['RICE Scored Backlog', 'Prioritized Feature List', 'Quarterly Roadmap'],
+        whenToUse: 'Kwartalne planowanie roadmapy, porównywanie featureów o różnej skali, gdy PM musi uzasadnić priorytetyzację przed zarządem lub inwestorami.',
+        limitations: 'Garbage in, garbage out — subiektywne szacunki dają fałszywe poczucie obiektywności. Nie uwzględnia zależności między featurami ani ryzyka strategicznego. Confidence jest nagminnie zawyżana.',
+        aiAutomation: 'yes',
+        complexity: 2,
+        cycleDuration: 'godziny–dni',
+        examples: [
+            'Onboarding checklist: Reach=5000, Impact=2, Confidence=80%, Effort=0.5 → RICE=16. Top priority.',
+            'Dark mode: Reach=8000, Impact=0.25, Confidence=50%, Effort=1.5 → RICE=0.67. Odrzuć.',
+            'Intercom — zastąpienie gut-feeling arkuszem RICE zmniejszyło czas planowania roadmapy o 40%.',
+        ]
+    },
+    {
+        id: 'ice-score',
+        category: 'prioritization',
+        name: 'ICE Score',
+        shortName: 'ICE',
+        author: 'Sean Ellis — GrowthHackers (2015)',
+        assumption: 'W growth hackingu liczy się szybkość iteracji. ICE (Impact × Confidence × Ease) to heurystyka pozwalająca zrankować dziesiątki pomysłów w minuty bez paraliżu analitycznego.',
+        phases: [
+            'Impact (1–10) — jak duży efekt na cel (np. activation rate)? Oprzyj na danych, nie intuicji.',
+            'Confidence (1–10) — skąd wiesz, że zadziała? 10 = masz dane z A/B testu. 1 = czyste zgadywanie.',
+            'Ease (1–10) — jak łatwe do wdrożenia? 10 = zmiana tekstu. 1 = 3 miesiące Engu.',
+            'ICE = I × C × E → max 1000 pkt. Sortuj i testuj od góry.',
+        ],
+        artifacts: ['ICE Scored Experiment Queue', 'Growth Backlog', 'Weekly Sprint Test List'],
+        whenToUse: 'Growth teams, hackathony, rapid experimentation — gdy masz >20 hipotez i musisz wybrać co testować w tym tygodniu.',
+        limitations: 'Wysoce subiektywny bez kalibracji między członkami zespołu. Ease może faworyzować szybkie, małe testy kosztem dużych inicjatyw strategicznych. Nadaje się do filtrowania, nie do precyzyjnej roadmapy.',
+        aiAutomation: 'yes',
+        complexity: 1,
+        cycleDuration: 'godziny',
+        examples: [
+            'CTA button copy change: I=7, C=8, E=9 → ICE=504. Start immediately.',
+            'Nowy onboarding flow: I=9, C=4, E=3 → ICE=108. Wróć gdy masz więcej danych.',
+            'Dropbox referral program: I=9, C=6, E=5 → ICE=270. Priorytet, mimo umiarkowanej łatwości.',
+        ]
+    },
+    {
+        id: 'wsjf',
+        category: 'prioritization',
+        name: 'WSJF — Weighted Shortest Job First',
+        shortName: 'WSJF',
+        author: 'Don Reinertsen / SAFe — Scaled Agile',
+        assumption: 'Optymalny wybór kolejności pracy maksymalizuje "Cost of Delay" podzielony przez czas realizacji. Prosta zasada: krótka praca o wysokim koszcie opóźnienia zawsze idzie pierwsza.',
+        phases: [
+            'User-Business Value (1–10) — ile traci biznes/klient gdy to opóźnimy?',
+            'Time Criticality (1–10) — czy jest deadline, sezonowość lub okno rynkowe?',
+            'Risk Reduction / Opportunity Enablement (1–10) — czy odblokuje inne prace lub zredukuje ryzyko?',
+            'Cost of Delay = User Value + Time Criticality + Risk Reduction',
+            'Job Size (1–10, relative) — rozmiar pracy (jak story points, relative do innych)',
+            'WSJF = Cost of Delay / Job Size → sortuj backlog malejąco.',
+        ],
+        artifacts: ['WSJF Scored Backlog', 'Program Increment (PI) Backlog', 'Portfolio Kanban'],
+        whenToUse: 'Portfolio management w SAFe, priorytetyzacja epiców i featureów między zespołami, gdy zespoły rywalizują o ograniczone zasoby inżynierskie.',
+        limitations: 'Cost of Delay trudny do kwantyfikacji bez danych historycznych. Wymaga kalibracji między zespołami (relative sizing). Może faworyzować "łatwe" prace kosztem strategicznie ważnych inicjatyw długoterminowych.',
+        aiAutomation: 'partial',
+        complexity: 3,
+        cycleDuration: 'dni–tygodnie',
+        examples: [
+            'Feature compliance (deadline ustawowy) + niska złożoność → WSJF=wysoki → natychmiast.',
+            'SAFe PI Planning — 3 zespoły rankują 15 epiców wspólnie używając WSJF w 2 godziny.',
+            'Spotify — priorytetyzacja cross-team backlogu: regulatory feature wyprzedza nową funkcję discovery.',
+        ]
+    },
+    {
+        id: 'kano',
+        category: 'prioritization',
+        name: 'Kano Model',
+        author: 'Noriaki Kano — Tokyo University of Science (1984)',
+        assumption: 'Nie wszystkie cechy wpływają tak samo na satysfakcję. Must-Be (brak = katastrofa), Performance (więcej = lepiej), Attractive (niespodziewana radość) — klasyfikacja determinuje co budować, a co jest "table stakes".',
+        phases: [
+            'Przygotuj listę 10–20 cech do oceny przez klientów.',
+            'Dla każdej cechy zadaj DWA pytania: funkcjonalne ("Jak byś się czuł gdyby TO BYŁO?") i dysfunkcjonalne ("Jak byś się czuł gdyby TEJ FUNKCJI NIE BYŁO?").',
+            'Skategoryzuj odpowiedzi wg tabeli Kano: Must-Be / Performance / Attractive / Indifferent / Reverse.',
+            'Must-Be najpierw (bez negocjacji). Performance: priorytetyzuj proporcjonalnie do wartości. Attractive: differentiatory — buduj gdy Must-Be i Performance pokryte.',
+        ],
+        artifacts: ['Kano Survey Results', 'Feature Classification Matrix', 'Delight/Dissatisfaction Map'],
+        whenToUse: 'Roadmap planning gdy nie wiesz co różnicuje cię od konkurencji, decyzja o differentiatorach vs "table stakes", research przed dużym redesignem.',
+        limitations: 'Kosztowne w realizacji (wymaga surveyu z minimum 20–30 klientami). Kategorie zmieniają się w czasie — Attractive staje się Must-Be (np. mapa offline w aplikacjach nawigacyjnych). Trudne do integracji z agile backlogiem.',
+        aiAutomation: 'partial',
+        complexity: 3,
+        cycleDuration: 'tygodnie',
+        examples: [
+            'iPhone — multitouch był Attractive w 2007. Dziś jest Must-Be dla każdego smartfona.',
+            'Bank mobilny — Attractive: Face ID login. Must-Be: historia transakcji, przelew. Indifferent: dark mode.',
+            'Spotify — "Discover Weekly" był Attractive differentiator. Teraz każdy serwis muzyczny go ma (→ Must-Be).',
+        ]
+    },
+    {
+        id: 'value-effort',
+        category: 'prioritization',
+        name: 'Value vs Effort Matrix',
+        shortName: '2×2 Matrix',
+        author: 'Design Thinking / Agile Community',
+        assumption: 'Najszybsza heurystyka priorytetyzacji: umieść każdą inicjatywę na osi Wartość (Y) × Wysiłek (X). Quick Wins zawsze idą pierwsze — dają maksymalne ROI przy minimalnym nakładzie.',
+        phases: [
+            'Oceń Value (relative: 1–10 lub S/M/L/XL) — ile wartości dostarcza użytkownikowi lub biznesowi?',
+            'Oceń Effort (relative: 1–10 lub S/M/L/XL) — ile czasu i zasobów pochłonie?',
+            'Narysuj macierz 2×2 i umieść inicjatywy: Q1 High Value + Low Effort = Quick Wins → do następnego sprintu.',
+            'Q2 High Value + High Effort = Major Projects → zaplanuj starannie. Q3 Low/Low = Fill-ins. Q4 Low Value + High Effort = Avoid → odrzuć.',
+        ],
+        artifacts: ['2×2 Prioritization Matrix', 'Quick Wins List', 'Avoid List (waste reduction)'],
+        whenToUse: 'Szybkie sesje priorytetyzacji z zespołem (30 min), warsztaty ze stakeholderami, gdy potrzebujesz konsensusu wizualnego bez skomplikowanych obliczeń.',
+        limitations: 'Wysoce subiektywne — bez danych każdy widzi "Quick Wins" inaczej. Brak uwzględnienia ryzyka, strategicznego dopasowania i zależności. "Quick Win bias" może prowadzić do pomijania ważnych, trudnych inicjatyw.',
+        aiAutomation: 'yes',
+        complexity: 1,
+        cycleDuration: 'godziny',
+        examples: [
+            'Stacja Robocza — Quick Win: dodaj skróty klawiszowe (1 dzień, +15% retention). Major: rewrite architektury.',
+            'E-commerce — Quick Win: zmień CTA z "Kup" na "Dodaj do koszyka" (+8% konwersja, 2h dev).',
+            'SaaS Sprint Planning — zespół 6 osób kategoryzuje 25 ticketów w 45 minut, konsensus wizualny na tablicy.',
+        ]
+    },
+    {
+        id: 'buy-a-feature',
+        category: 'prioritization',
+        name: 'Buy a Feature',
+        author: 'Luke Hohmann — Innovation Games (2006)',
+        assumption: 'Dając klientom wirtualny "budżet" do wydania na cechy produktu, ujawniasz ich prawdziwe priorytety lepiej niż jakiekolwiek ankiety — pieniądze (nawet wirtualne) wymuszają autentyczne decyzje trade-off.',
+        phases: [
+            'Przygotuj listę 15–20 featureów z "cenami" proporcjonalnymi do kosztu realizacji (droższe = trudniejsze).',
+            'Daj każdemu uczestnikowi budżet równy ok. 1/3 sumy cen wszystkich featureów (wymusza wybory).',
+            'Sesja zakupów: każdy wydaje swój budżet. Niektóre drogie featureylub wymagają "zakupu grupowego" — co wywołuje dyskusję.',
+            'Podlicz ile "kupiono" każdego feature → ranking realnych priorytetów klientów.',
+        ],
+        artifacts: ['Feature Purchase Report', 'Customer Priority Ranking', 'Validated Roadmap Input'],
+        whenToUse: 'Walidacja roadmapy z klientami w panelu, sesje discovery z grupą użytkowników, gdy chcesz przebić "wszystko jest ważne" i zobaczyć prawdziwe priorytety.',
+        limitations: 'Wymaga dostępu do reprezentatywnej grupy klientów (min. 8–15 osób). Ceny muszą być precyzyjnie skalibrowane. Klienci mogą grać "bezpiecznie" zamiast innovatively. Nie zastępuje ilościowych badań rynku.',
+        aiAutomation: 'no',
+        complexity: 2,
+        cycleDuration: 'godziny–dni',
+        examples: [
+            'B2B SaaS — panel 12 klientów, budżet $1000 na featureylub, odkrycie że "bulk export" wygrywa z "AI recommendations".',
+            'Banking App — klienci kupują "instant notifications" za $200, ignorują "virtual cards" warte $50.',
+            'Innowacja grupowa: drogi feature "Real-time collaboration" wymaga zbiórki od 3 graczy → ujawnia jego realną wartość.',
+        ]
+    },
+    // ── Metryki i wskaźniki ───────────────────────────────────────────────────
+    {
+        id: 'aarrr',
+        category: 'metrics',
+        name: 'AARRR — Pirate Metrics',
+        shortName: 'AARRR',
+        author: 'Dave McClure — 500 Startups (2007)',
+        assumption: 'Każdy produkt cyfrowy ma 5 kluczowych etapów cyklu życia użytkownika. Identyfikacja wąskiego gardła w lejku pozwala skupić wysiłki growth na obszarze o najwyższym ROI zamiast optymalizować wszystko naraz.',
+        phases: [
+            'Acquisition — skąd przychodzą? CAC, kanały (SEO/Paid/Viral), UTM tracking, konwersja landing page.',
+            'Activation — czy mają "Aha Moment"? Onboarding completion rate, time-to-first-value, Day 1 action completion.',
+            'Retention — czy wracają? D1/D7/D30 retention, DAU/MAU ratio, churn rate, cohort analysis.',
+            'Referral — czy polecają? NPS, viral coefficient (k-factor), referral program conversion, organic growth rate.',
+            'Revenue — czy płacą? MRR, ARPU, LTV, LTV:CAC ratio (zdrowe >3:1), payback period.',
+        ],
+        artifacts: ['AARRR Funnel Dashboard', 'Cohort Analysis', 'Retention Curves', 'Channel Attribution Report'],
+        whenToUse: 'Startupy i produkty PLG szukające growth levers, diagnoza "gdzie tracimy użytkowników", kwartalny przegląd growth team, priorytetyzacja eksperymentów.',
+        limitations: 'Model liniowy — nie odzwierciedla złożonych, nielinearnych ścieżek użytkownika ani B2B z długim sales cycle. Kolejność liter myląca: Retention jest ważniejsza od Acquisition (Dave McClure sam zaproponował RARRA jako poprawkę).',
+        aiAutomation: 'yes',
+        complexity: 2,
+        cycleDuration: 'ciągły',
+        examples: [
+            'Dropbox — bottleneck w Activation (install→sync first file): naprawienie onboardingu +60% activation.',
+            'Slack — viral loop przez Referral: każdy nowy user zapraszał średnio 4 osoby (k-factor=1.4 → growth bez Paid Acquisition).',
+            'SaaS — D30 retention 15% → priorytet na Retention, nie Acquisition. Więcej userów do "dziurawego wiadra" nie pomaga.',
+        ]
+    },
+    {
+        id: 'heart',
+        category: 'metrics',
+        name: 'HEART Framework',
+        author: 'Kerry Rodden, Hilary Hutchinson, Xin Fu — Google (2010)',
+        assumption: 'Metryki UX muszą mierzyć doświadczenie w 5 wymiarach (Happiness, Engagement, Adoption, Retention, Task Success), a nie tylko konwersje. Struktura Goals→Signals→Metrics eliminuje vanity metrics.',
+        phases: [
+            'Happiness — subiektywna satysfakcja: CSAT, NPS, SUS score, App Store rating. "Czy użytkownicy LUBIĄ produkt?"',
+            'Engagement — głębokość użytkowania: session frequency, DAU/MAU, features per session, depth of interaction.',
+            'Adoption — czy nowi userzy wdrożyli kluczowe funkcje? New user activation rate, feature adoption curve.',
+            'Retention — czy wracają w czasie? Cohort retention, churn rate, resurrection rate (powrót po odejściu).',
+            'Task Success — czy osiągają cel? Completion rate, error rate, time-on-task, learnability index.',
+        ],
+        artifacts: ['HEART Goals/Signals/Metrics Table', 'UX Scorecard', 'Quarterly UX Review', 'GSM (Goals-Signals-Metrics) Doc'],
+        whenToUse: 'Mierzenie jakości produktu z perspektywy UX, pre/post redesign comparison, gdy NPS i conversion rate nie oddają pełnego obrazu doświadczenia użytkownika.',
+        limitations: 'Happiness trudna do ciągłego mierzenia (wymaga aktywnych badań). Nie zastępuje metryk biznesowych (MRR, churn). Ryzyko mierzenia wszystkich 5 wymiarów naraz — lepsza koncentracja na 2–3 priorytetowych.',
+        aiAutomation: 'partial',
+        complexity: 3,
+        cycleDuration: 'kwartał',
+        examples: [
+            'Google Maps redesign — HEART pokazał: Task Success wzrósł o 20%, ale Happiness spadło (zbyt dużo zmian naraz).',
+            'Gmail — Adoption nowego Compose mierzony oddzielnie dla power users vs casual: różne progi sukcesu.',
+            'SaaS Dashboard — Engagement: avg. 2.1 features/session (baseline), cel Q2: 3.5 → kieruje roadmapę na cross-feature discovery.',
+        ]
+    },
+    {
+        id: 'omtm',
+        category: 'metrics',
+        name: 'OMTM — One Metric That Matters',
+        shortName: 'OMTM',
+        author: 'Alistair Croll & Benjamin Yoskovitz — Lean Analytics (2013)',
+        assumption: 'W każdej fazie produktu istnieje jedna metryka ważniejsza od wszystkich innych. Fokus całego zespołu na jednej liczbie eliminuje "dashboard theater" i zapobiega rozproszeniu uwagi.',
+        phases: [
+            'Zidentyfikuj aktualną fazę produktu: Empathy (czy problem jest realny?) → Stickiness (czy wracają?) → Virality (czy polecają?) → Revenue (czy płacą?) → Scale (jak rosnąć?).',
+            'Dobierz OMTM do fazy: Empathy=interviews/week. Stickiness=D7 retention. Virality=k-factor. Revenue=MRR. Scale=CAC.',
+            'Ustaw konkretny cel i timeframe: "Zwiększ D7 retention z 25% do 40% w Q2".',
+            'Cały team raportuje, eksperymentuje i priorytetyzuje wyłącznie pod tę jedną metrykę.',
+            'Po osiągnięciu targetu → zmień OMTM na metrykę kolejnej fazy.',
+        ],
+        artifacts: ['OMTM Dashboard (1 metryka + 3–5 supporting)', 'Phase→Metric Roadmap', 'Weekly Metric Review'],
+        whenToUse: 'Wczesne startupy, nowe produkty lub funkcje, gdy zespół gubi się w morzu dashboardów, OKR planning, piątki ze wszystkimi "priorytetami jednocześnie".',
+        limitations: 'Goodhart\'s Law: "When a measure becomes a target, it ceases to be a good measure." Optymalizacja OMTM kosztem innych ważnych obszarów. Wybór złej OMTM dla fazy = kwartały zmarnowanego wysiłku. Nie działa przy złożonych B2B z wieloma segmentami.',
+        aiAutomation: 'partial',
+        complexity: 2,
+        cycleDuration: 'kwartał / faza produktu',
+        examples: [
+            'Airbnb (Stickiness phase) — OMTM: "Liczba nocy zarezerwowanych przez powracających hostów" (nie nowi userzy).',
+            'Facebook early growth — OMTM: "7 znajomych w 10 dni" jako proxy dla długoterminowej retencji.',
+            'B2B SaaS (Revenue phase) — OMTM: "MRR z klientów z onboardingiem >30 dni" eliminuje "leaky bucket" problem.',
+        ]
+    },
+    {
+        id: 'input-metrics',
+        category: 'metrics',
+        name: 'Input Metrics Tree',
+        shortName: 'IMT',
+        author: 'Amazon — Working Backwards (Jeff Bezos)',
+        assumption: 'Output metrics (przychód, churn) mówią co się stało — Input metrics mówią dlaczego i co TERAZ zrobić. Drzewo przyczynowo-skutkowe od North Star do konkretnych działań zespołu eliminuje opóźnienie między akcją a wynikiem.',
+        phases: [
+            'Zdefiniuj Output Metric (North Star) — np. "Weekly Active Users paying > $50/mo".',
+            'Rozłóż na 3–5 Input Metrics pierwszego poziomu: Acquisition Rate + Activation Rate + Revenue per Activated User.',
+            'Dla każdej Input Metric rozłóż na Input Metrics drugiego poziomu (co na nią wpływa?).',
+            'Przypisz każdemu liściu drzewa team/owner i konkretną akcję produktową lub operacyjną.',
+            'Monitoruj input metrics tygodniowo — zmieniają się PRZED output metrics, dając czas na reakcję.',
+        ],
+        artifacts: ['Metric Tree (Miro/FigJam)', 'Weekly Input Dashboard', 'Team Metric Ownership Map'],
+        whenToUse: 'Kwartalny OKR planning, gdy NSM nie przekłada się na działania zespołów, post-mortem dlaczego przychód spadł, alignment cross-team.',
+        limitations: 'Budowanie drzewa wymaga głębokiej znajomości przyczynowości w produkcie. Ryzyko wyboru pozornych korelacji zamiast prawdziwych przyczyn. Zbyt rozbudowane drzewo (>3 poziomy) traci czytelność. Wymaga danych by walidować zależności.',
+        aiAutomation: 'yes',
+        complexity: 4,
+        cycleDuration: 'kwartał',
+        examples: [
+            'Amazon — NSM: "Items sold". Input L1: Selection × Availability × Price × Convenience. Każdy team owni jeden liść.',
+            'Spotify — NSM: "Czas słuchania". Input: Playlist saves + Search-to-play rate + Notification CTR.',
+            'B2B SaaS — churn wzrósł: Input metrics pokazały spadek "feature adoption D30" → root cause w onboardingu, nie w cenach.',
+        ]
+    },
 ]
 
 export const CATEGORIES = {
@@ -473,6 +753,8 @@ export const CATEGORIES = {
     validation: { label: 'Modele walidacji', color: '#14B8A6' },
     market: { label: 'Analiza rynku', color: '#3B82F6' },
     artifact: { label: 'Artefakty / Output', color: '#EC4899' },
+    prioritization: { label: 'Priorytetyzacja', color: '#EF4444' },
+    metrics: { label: 'Metryki i wskaźniki', color: '#F59E0B' },
 } as const
 
 export const AI_LABELS = {

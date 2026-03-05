@@ -4,7 +4,8 @@ import { useAppStore } from '../store/appStore'
 import { FRAMEWORKS, CATEGORIES, AI_LABELS, type Framework } from '../data/frameworks'
 
 const CAT_ICONS: Record<string, string> = {
-    cycle: '🔄', problem: '🎯', validation: '🧪', market: '📡', artifact: '📋'
+    cycle: '🔄', problem: '🎯', validation: '🧪', market: '📡', artifact: '📋',
+    prioritization: '⚖️', metrics: '📊',
 }
 const AUTO_ICONS: Record<string, string> = { yes: '⚡', partial: '〰️', no: '🔒' }
 
@@ -634,7 +635,7 @@ export default function Kompendium() {
     const [tab, setTab] = useState<Tab>('frameworks')
 
     const TABS: { id: Tab; label: string }[] = [
-        { id: 'frameworks', label: '📚 Frameworki (15)' },
+        { id: 'frameworks', label: '📚 Frameworki (25)' },
         { id: 'when', label: '📊 Kiedy co stosować' },
         { id: 'checklist', label: '✅ Risk Checklist' },
         { id: 'yoda', label: '🎯 YODA Data' },
@@ -648,7 +649,7 @@ export default function Kompendium() {
                     <h1 className="text-2xl font-sans font-semibold text-[#0D2535] dark:text-slate-100">Kompendium Discovery</h1>
                 </div>
                 <p className="text-slate-500 dark:text-slate-400 font-sans text-sm max-w-2xl">
-                    Zestawienie 15 metod, cykli i frameworków product discovery z analizą podatności na automatyzację AI.
+                    Zestawienie 25 metod, cykli i frameworków product discovery z analizą podatności na automatyzację AI.
                 </p>
             </div>
 
