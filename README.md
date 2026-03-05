@@ -8,6 +8,18 @@
 
 ---
 
+## What's New in v2.3.0
+
+- **Dark Mode** — toggle in the top bar, preference saved automatically
+- **Dashboard filters** — filter sessions by mode (Auto / Problem / Solution) and status
+- **Interview Simulator — streaming generation** — archetypes appear one by one as they're generated; configurable count (1–8) and market type (B2C / B2B / SaaS / Enterprise / Mixed)
+- **Kompendium v2.3** — 25 frameworks total (+10: prioritization × 7, metrics × 4); Risk Checklist rebuilt with severity levels (FATAL / HIGH / MEDIUM) and context-aware filtering (New Product / Feature / Service / AI Product)
+- **BA Agent — Business Model Hypothesis** — JTBD → revenue model (per-seat / usage / outcome / freemium / marketplace), Defensibility (DHM), whitespace analysis
+- **BA Agent — Assumption Ownership** — every FATAL assumption requires an owner (PM / Eng / Design / Research), deadline, and validation method before GO
+- **PM Agent — RICE Calibration Guardrails** — reach uses MAU not registered users, confidence capped at 80% without MVP data, effort gets +40% buffer
+
+---
+
 ## What is this?
 
 Product Discovery is a **structured, AI-driven discovery process** that prevents building products nobody wants. It supports the full PM workflow — from idea validation through competitive analysis to export-ready reports.
@@ -124,9 +136,17 @@ After completion, the report includes:
 ### Interview Simulator
 Practice discovery interviews with AI personas:
 1. **Describe your target segment** (e.g. "UX freelancers, 3–10 clients/year, Poland")
-2. **Generate archetypes** — AI creates 4 user personas with psychology, JTBD hypotheses, red flags
-3. **Start interview** — choose an archetype and ask questions
-   - Each response includes: answer, quality rating, hidden thought, follow-up suggestion
+2. **Configure** — set archetype count (1–8) and market type (B2C / B2B / SaaS / Enterprise / Mixed)
+3. **Generate archetypes** — AI streams personas one by one with psychology, JTBD hypotheses, red flags
+4. **Start interview** — choose an archetype and ask questions
+   - Each response includes: answer, quality rating (genuine / detailed / polite lie / vague), hidden thought, follow-up suggestion
+
+### Knowledge Compendium (`/kompendium`)
+Reference library for product managers:
+- **25 frameworks** across 7 categories: discovery cycles, problem definition, validation, market analysis, artifacts, prioritization, metrics
+- **When to use** — comparison table (complexity, cycle time, AI automation level)
+- **Risk Checklist** — 53 questions across 9 categories with severity levels (FATAL / HIGH / MEDIUM); context-aware (filters to relevant questions for New Product / Feature / Service / AI Product); persisted progress
+- **YODA Data** — pretotyping methodology with scoring calculator and experiment tracker
 
 ### Settings
 - Change data folder
@@ -134,6 +154,7 @@ Practice discovery interviews with AI personas:
 - Connect Google account (OAuth2)
 - Configure Slack webhook
 - Toggle Mock Mode (fast testing without LLM calls)
+- Dark / light mode toggle (also available in top bar)
 
 ---
 

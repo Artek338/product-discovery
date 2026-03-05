@@ -18,7 +18,7 @@ export class DashboardPage extends BasePage {
     this.newProjectBtn = page.getByRole('link', { name: /Nowy projekt|New Project/i }).last()
     this.projectsTable = page.locator('table')
     this.projectRows = page.locator('tbody tr:not(:has(td[colspan="6"]))')
-    this.statTotalProjects = page.locator('span.text-slate-300').filter({ hasText: /Łącznie|Total/i })
+    this.statTotalProjects = page.locator('span.text-slate-500').filter({ hasText: /Łącznie|Total/i })
     this.statQueued = page.getByText(/Oczekuje|Queued/i).first()
     this.statCompleted = page.getByText(/Ukończone|Completed/i).first()
     this.statSuccessRate = page.getByText(/Trafność|Success rate/i)

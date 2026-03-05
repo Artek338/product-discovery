@@ -27,8 +27,8 @@ test.describe('Dashboard', () => {
     const dashboard = new DashboardPage(page)
     await expect(page.getByRole('link', { name: /Projekty|Dashboard/i }).first()).toBeVisible()
     await expect(dashboard.newProjectBtn).toBeVisible()
-    await expect(page.getByRole('link', { name: /Symulator|Simulator/i })).toBeVisible()
-    await expect(page.getByRole('link', { name: /Ustawienia|Settings/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /Symulator|Simulator/i }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: /Ustawienia|Settings/i }).first()).toBeVisible()
   })
 
   test('renders stat cards (total, queued, completed, success rate)', async ({ page }) => {

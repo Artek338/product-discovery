@@ -112,7 +112,7 @@ test.describe('New Discovery Form', () => {
 
   // ── Upload pliku ──────────────────────────────────────────────────────────────
 
-  test('file upload accepts .txt file and populates notes textarea', async ({ page }) => {
+  test('file upload accepts .txt file and shows file pill', async ({ page }) => {
     const disc = new NewDiscoveryPage(page)
 
     // Utwórz plik tymczasowy w pamięci i zasymuluj upload
@@ -123,13 +123,12 @@ test.describe('New Discovery Form', () => {
       buffer: Buffer.from(testContent),
     })
 
-    // Poczekaj na populate textarea
-    await page.waitForTimeout(500)
-    const notesValue = await disc.notesTextarea.inputValue()
-    expect(notesValue).toContain('Wywiad')
+    // Poczytaj czy pojawiła się pigułka z nazwą pliku
+    const filePill = page.getByText('interview_notes.txt')
+    await expect(filePill).toBeVisible()
   })
 
-  test('file upload accepts .md file', async ({ page }) => {
+  test('file upload accepts .md file and shows file pill', async ({ page }) => {
     const disc = new NewDiscoveryPage(page)
     const mdContent = '# Notatki\n\n- Problem A\n- Problem B\n'
     await disc.fileUpload.setInputFiles({
@@ -137,9 +136,10 @@ test.describe('New Discovery Form', () => {
       mimeType: 'text/markdown',
       buffer: Buffer.from(mdContent),
     })
-    await page.waitForTimeout(500)
-    const val = await disc.notesTextarea.inputValue()
-    expect(val.length).toBeGreaterThan(0)
+
+    // Poczytaj czy pojawiła się pigułka z nazwą pliku
+    const filePill = page.getByText('notes.md')
+    await expect(filePill).toBeVisible()
   })
 
   // ── Submit i redirect ─────────────────────────────────────────────────────────

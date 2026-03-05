@@ -58,3 +58,4 @@ backend/discovery.db
 # Logs
 logs/
 *.log
+test-results/
