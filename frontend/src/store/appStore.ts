@@ -9,6 +9,8 @@ import type {
 } from '../types/discovery'
 import type { Lang } from '../lib/i18n'
 
+export type ThemeMode = 'light' | 'dark'
+
 interface AppState {
   // Projects list
   projects: ProjectSummary[]
@@ -45,6 +47,13 @@ interface AppState {
 
   llmModel: string
   setLlmModel: (model: string) => void
+
+  globalSearchQuery: string
+  setGlobalSearchQuery: (query: string) => void
+
+  theme: ThemeMode
+  setTheme: (theme: ThemeMode) => void
+  toggleTheme: () => void
 }
 
 function getLS(key: string, fallback: string): string {
@@ -94,4 +103,18 @@ export const useAppStore = create<AppState>((set) => ({
     localStorage.setItem('pd_llm_model', llmModel)
     set({ llmModel })
   },
+
+  globalSearchQuery: '',
+  setGlobalSearchQuery: (globalSearchQuery) => set({ globalSearchQuery }),
+
+  theme: (getLS('pd_theme', 'light') as ThemeMode),
+  setTheme: (theme) => {
+    localStorage.setItem('pd_theme', theme)
+    set({ theme })
+  },
+  toggleTheme: () => set((state) => {
+    const nextTheme = state.theme === 'light' ? 'dark' : 'light'
+    localStorage.setItem('pd_theme', nextTheme)
+    return { theme: nextTheme }
+  })
 }))

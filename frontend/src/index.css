@@ -4,10 +4,8 @@
 
 @layer base {
   body {
-    background-color: #EFF2F7;
-    color: #0D2535;
     overflow-x: hidden;
-    @apply antialiased font-sans;
+    @apply antialiased font-sans bg-[#EFF2F7] dark:bg-[#111111] text-[#0D2535] dark:text-slate-200 transition-colors;
   }
 
   h1,

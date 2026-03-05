@@ -13,9 +13,11 @@ const STATUS_BADGE: Record<string, string> = {
 }
 
 export default function Dashboard() {
-  const { projects, setProjects, language } = useAppStore()
+  const { projects, setProjects, language, globalSearchQuery, setGlobalSearchQuery } = useAppStore()
   const navigate = useNavigate()
-  const [searchQuery, setSearchQuery] = useState('')
+  const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [filterOption, setFilterOption] = useState<string>('all')
 
   useEffect(() => {
     api.getProjects().then(setProjects).catch(console.error)
@@ -34,9 +36,56 @@ export default function Dashboard() {
   const failedCount = projects.filter(p => p.status === 'failed').length
   const successRate = projects.length > 0 ? Math.round((completedCount / projects.length) * 100) : 0
 
-  const filteredProjects = projects.filter(p =>
-    p.project_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const filteredProjects = projects.filter(p => {
+    const matchesSearch = p.project_name?.toLowerCase().includes(globalSearchQuery.toLowerCase())
+    if (!matchesSearch) return false
+
+    switch (filterOption) {
+      case 'mode_auto':
+        return p.mode === 'auto'
+      case 'mode_problem':
+        return p.mode === 'problem'
+      case 'mode_solution':
+        return p.mode === 'solution'
+      case 'status_completed':
+        return p.status === 'completed'
+      case 'status_running':
+        return p.status === 'running'
+      case 'status_failed':
+        return p.status === 'failed'
+      default:
+        return true
+    }
+  })
+
+  const handleExportCSV = () => {
+    setIsExportOpen(false)
+    const headers = ['Nr', 'Nazwa projektu', 'Tryb', 'Status', 'Data']
+    const rows = filteredProjects.map((p, idx) => [
+      idx + 1,
+      p.project_name,
+      p.mode,
+      p.status,
+      new Date(p.created_at).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB')
+    ])
+
+    const csvContent = "data:text/csv;charset=utf-8,"
+      + [headers, ...rows].map(row => row.join(",")).join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "projekty_zestawienie.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  const handleExportPDF = () => {
+    setIsExportOpen(false)
+    window.print()
+  }
+
 
   // Confidence breakdown (tylko ukończone z weryfiktem)
   const withVerdict = projects.filter(p => p.verdict)
@@ -49,121 +98,105 @@ export default function Dashboard() {
   const needsPct = Math.round((needsCount / total) * 100)
   const nogoPct = Math.round((nogoCount / total) * 100)
 
-  // SVG circle helpers (r=40, circumference ≈ 251)
-  const circ = 251
-  const circleOffset = (pct: number) => circ - (pct / 100) * circ
+  // SVG circle helpers are now directly inlined or we can leave them
+  // Removed circ because we use 264 now directly in SVG
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto overflow-hidden">
       {/* Top Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Discovery overview */}
-        <div
-          className="col-span-1 rounded-2xl p-4 md:p-6 flex flex-col justify-between"
-          style={{ backgroundColor: '#0D2535' }}
-        >
-          <div>
-            <h2 className="text-white text-lg font-sans font-medium mb-6">
-              {t(language, 'dash_overview')}
-            </h2>
-            <div className="flex items-end gap-3 mb-8">
-              <span className="text-5xl font-sans font-semibold" style={{ color: '#FBBF24' }}>
-                {projects.length}
-              </span>
-              <span className="text-slate-300 text-sm mb-1">
-                {language === 'pl' ? 'Łącznie' : 'Total'}<br />
-                {language === 'pl' ? 'projektów' : 'Projects'}
-              </span>
-            </div>
-            <div className="flex items-center gap-4 text-sm text-slate-300 flex-wrap">
-              <div>
-                <strong className="text-white font-medium">{queuedCount}</strong>{' '}
-                {t(language, 'dash_queued')}
-              </div>
-              <div>
-                <strong className="text-white font-medium">{completedCount}</strong>{' '}
-                {t(language, 'dash_done')}
-              </div>
-              <div>
-                <strong className="text-white font-medium">{successRate}%</strong>{' '}
-                {t(language, 'dash_success_rate')}
-              </div>
+        <div className="col-span-1 bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] flex flex-col items-center relative text-center transition-colors">
+          <div className="flex justify-between items-center w-full mb-8 relative">
+            <div className="flex-1 text-center">
+              <h3 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100 text-lg inline-block">
+                {t(language, 'dash_overview')}
+              </h3>
             </div>
           </div>
-          <div className="mt-6">
-            <div className="bg-white/10 rounded-lg px-3 py-2 flex items-center gap-2">
-              <Search size={16} className="text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t(language, 'search_ph')}
-                className="bg-transparent border-none outline-none text-white text-sm w-full placeholder:text-slate-400"
-              />
+          <div className="flex flex-col items-center justify-center gap-2 mb-8 w-full">
+            <span className="text-6xl font-sans font-bold leading-none text-[#0D2535] dark:text-slate-100">
+              {projects.length}
+            </span>
+            <span className="text-slate-500 dark:text-slate-400 text-sm text-center leading-tight">
+              {language === 'pl' ? 'Łącznie projektów' : 'Total Projects'}
+            </span>
+          </div>
+          <div className="flex items-center justify-center gap-6 text-sm flex-wrap w-full mt-auto">
+            <div className="flex flex-col items-center">
+              <strong className="text-[#0D2535] dark:text-slate-100 font-semibold text-xl">{queuedCount}</strong>
+              <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t(language, 'dash_queued')}</span>
+            </div>
+            <div className="flex flex-col items-center border-x border-[#E2E8F0] dark:border-[#333333] px-6">
+              <strong className="text-[#14B8A6] font-semibold text-xl">{completedCount}</strong>
+              <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t(language, 'dash_done')}</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <strong className="text-[#0D2535] dark:text-slate-100 font-semibold text-xl">{successRate}%</strong>
+              <span className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t(language, 'dash_success_rate')}</span>
             </div>
           </div>
         </div>
 
         {/* Session Statistics */}
-        <div className="col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="font-sans font-semibold text-[#0D2535] text-lg">
-              {t(language, 'dash_session_stats')}
-            </h3>
-            <button className="text-slate-400 hover:bg-slate-50 p-1 rounded">
-              <MoreHorizontal size={18} />
-            </button>
+        <div className="col-span-1 bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] flex flex-col items-center relative text-center transition-colors">
+          <div className="flex justify-between items-center w-full mb-8 relative">
+            <div className="flex-1 text-center">
+              <h3 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100 text-lg inline-block">
+                {t(language, 'dash_session_stats')}
+              </h3>
+            </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div className="flex flex-col items-center justify-center gap-8 w-full h-full">
             {/* Donut chart — rzeczywiste dane */}
             {projects.length > 0 ? (
               <div
-                className="relative w-28 h-28 rounded-full shrink-0"
+                className="relative w-36 h-36 rounded-full shrink-0"
                 style={{
                   background: `conic-gradient(
-                    #0D2535 0% ${(completedCount / projects.length) * 100}%,
+                    #14B8A6 0% ${(completedCount / projects.length) * 100}%,
                     #FF8A65 ${(completedCount / projects.length) * 100}% ${((completedCount + failedCount) / projects.length) * 100}%,
                     #FBBF24 ${((completedCount + failedCount) / projects.length) * 100}% 100%
                   )`,
                 }}
               >
-                <div className="absolute inset-0 m-auto w-16 h-16 bg-white rounded-full" />
+                <div className="absolute inset-0 m-auto w-24 h-24 bg-white dark:bg-[#1A1A1A] rounded-full transition-colors" />
               </div>
             ) : (
               <div
-                className="relative w-28 h-28 rounded-full shrink-0"
+                className="relative w-36 h-36 rounded-full shrink-0"
                 style={{ background: '#F1F5F9' }}
               >
-                <div className="absolute inset-0 m-auto w-16 h-16 bg-white rounded-full" />
+                <div className="absolute inset-0 m-auto w-24 h-24 bg-white dark:bg-[#1A1A1A] rounded-full transition-colors" />
               </div>
             )}
 
-            <div className="space-y-4">
-              <div>
-                <div className="flex items-center gap-2 text-sm text-[#0D2535] font-medium">
-                  <span className="w-2 h-2 rounded-full bg-[#0D2535]" />
+            <div className="flex flex-wrap items-start justify-center gap-x-6 gap-y-4 w-full mt-auto">
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-sm text-[#0D2535] dark:text-slate-200 font-medium mb-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#14B8A6]" />
                   {t(language, 'status_completed')}
                 </div>
-                <div className="text-xs text-slate-400 ml-4">
+                <div className="text-xs text-slate-400">
                   {completedCount} {t(language, 'dash_sessions_label')}
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2 text-sm text-[#0D2535] font-medium">
-                  <span className="w-2 h-2 rounded-full bg-[#FBBF24]" />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-sm text-[#0D2535] dark:text-slate-200 font-medium mb-1">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#FBBF24]" />
                   {t(language, 'status_queued')}
                 </div>
-                <div className="text-xs text-slate-400 ml-4">
+                <div className="text-xs text-slate-400">
                   {queuedCount + activeCount} {t(language, 'dash_sessions_label')}
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-2 text-sm text-[#0D2535] font-medium">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#FF8A65' }} />
+              <div className="flex flex-col items-center">
+                <div className="flex items-center gap-1.5 text-sm text-[#0D2535] dark:text-slate-200 font-medium mb-1">
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#FF8A65' }} />
                   {t(language, 'status_failed')}
                 </div>
-                <div className="text-xs text-slate-400 ml-4">
+                <div className="text-xs text-slate-400">
                   {failedCount} {t(language, 'dash_sessions_label')}
                 </div>
               </div>
@@ -172,75 +205,75 @@ export default function Dashboard() {
         </div>
 
         {/* Discovery Effectiveness — realne dane werdyktów */}
-        <div className="col-span-1 bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="font-sans font-semibold text-[#0D2535] text-lg">
-              {t(language, 'dash_effectiveness')}
-            </h3>
-            <button className="text-slate-400 hover:bg-slate-50 p-1 rounded">
-              <MoreHorizontal size={18} />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-4 mb-6 text-xs text-slate-500 flex-wrap">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#14B8A6]" />
-              {t(language, 'dash_high_conf')} (GO)
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#FBBF24]" />
-              {t(language, 'dash_medium_conf')}
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#64748B]" />
-              {t(language, 'dash_low_conf')} (NO-GO)
+        <div className="col-span-1 bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] flex flex-col relative text-center transition-colors">
+          <div className="flex justify-between items-center mb-8 w-full relative">
+            <div className="flex-1 text-center">
+              <h3 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100 text-lg inline-block">
+                {t(language, 'dash_effectiveness')}
+              </h3>
             </div>
           </div>
 
           {withVerdict.length === 0 ? (
-            <p className="text-sm text-slate-400 font-sans text-center py-4">
+            <p className="text-sm text-slate-400 font-sans text-center py-4 my-auto">
               {language === 'pl' ? 'Brak ukończonych sesji z werydktem.' : 'No completed sessions with verdicts yet.'}
             </p>
           ) : (
-            <div className="flex items-center justify-around">
-              {[
-                { pct: goPct, color: '#14B8A6', label: 'GO' },
-                { pct: needsPct, color: '#FBBF24', label: language === 'pl' ? 'Więcej\ndanych' : 'More\ndata' },
-                { pct: nogoPct, color: '#64748B', label: 'NO-GO' },
-              ].map(({ pct, color, label }) => (
-                <div key={label} className="relative w-20 h-20 flex flex-col items-center">
-                  <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" stroke="#F1F5F9" strokeWidth="10" fill="none" />
-                    <circle
-                      cx="50" cy="50" r="40"
-                      stroke={color}
-                      strokeWidth="10"
-                      fill="none"
-                      strokeDasharray={circ}
-                      strokeDashoffset={circleOffset(pct)}
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="font-sans font-bold text-[#0D2535] text-sm">{pct}%</span>
+            <div className="flex flex-col w-full h-full justify-between items-center">
+              {/* WYKRESY KOŁOWE U GÓRY */}
+              <div className="flex items-start justify-center gap-6 mb-8 w-full">
+                {[
+                  { pct: goPct, color: '#14B8A6', label: 'GO' },
+                  { pct: needsPct, color: '#FBBF24', label: language === 'pl' ? 'Więcej\ndanych' : 'More\ndata' },
+                  { pct: nogoPct, color: '#64748B', label: 'NO-GO' },
+                ].map(({ pct, color, label }) => (
+                  <div key={label} className="flex flex-col items-center">
+                    <div className="relative w-20 h-20 mb-3">
+                      <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="42" stroke="#F1F5F9" strokeWidth="6" fill="none" />
+                        <circle
+                          cx="50" cy="50" r="42"
+                          stroke={color}
+                          strokeWidth="6"
+                          fill="none"
+                          strokeDasharray={264}
+                          strokeDashoffset={264 - (pct / 100) * 264}
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center">
+                        <span className="font-sans font-bold text-[#0D2535] dark:text-slate-100 text-sm">{pct}%</span>
+                      </div>
+                    </div>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-sans text-center leading-tight whitespace-pre-line font-medium">
+                      {label}
+                    </span>
                   </div>
-                  <span className="text-xs text-slate-400 font-sans text-center mt-1 leading-tight whitespace-pre-line">
-                    {label}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* OPISY POD WYKRESAMI ZOSTALY USUNIETE ZGODNIE Z PROSBA UZYTKOWNIKA */}
             </div>
           )}
         </div>
       </div>
 
       {/* Projects Table */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+      <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <h3 className="font-sans font-semibold text-[#0D2535] text-lg">
+          <h3 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100 text-lg">
             {t(language, 'dash_table_title')}
           </h3>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-2 px-3 py-2 border border-[#E2E8F0] dark:border-[#333333] rounded-lg bg-white dark:bg-[#111111] transition-colors">
+              <input
+                type="text"
+                value={globalSearchQuery}
+                onChange={(e) => setGlobalSearchQuery(e.target.value)}
+                placeholder={t(language, 'search_ph')}
+                className="bg-transparent border-none outline-none text-sm text-[#0D2535] dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 text-left w-full sm:w-48"
+              />
+              <Search size={14} className="text-slate-400" />
+            </div>
             <Link
               to="/discovery/new"
               className="flex items-center gap-2 text-sm font-sans font-semibold text-white px-4 py-2 rounded-lg shadow-sm transition-colors"
@@ -251,19 +284,65 @@ export default function Dashboard() {
               <Plus size={15} />
               {t(language, 'dash_new_btn')}
             </Link>
-            <button className="flex items-center gap-2 text-sm text-[#0D2535] border border-[#E2E8F0] px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors">
-              <Filter size={14} /> {t(language, 'dash_filter')}
-            </button>
-            <button className="flex items-center gap-2 text-sm text-[#0D2535] border border-[#E2E8F0] px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors">
-              <Download size={14} /> {t(language, 'dash_export')}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className={`flex items-center gap-2 text-sm text-[#0D2535] dark:text-slate-300 border border-[#E2E8F0] dark:border-[#333333] px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors ${filterOption !== 'all' ? 'bg-slate-50 dark:bg-[#2A2A2A] font-medium' : ''}`}
+              >
+                <Filter size={14} />
+                {filterOption === 'all' && t(language, 'dash_filter')}
+                {filterOption === 'mode_auto' && 'Tryb: Auto'}
+                {filterOption === 'mode_problem' && 'Tryb: Problem'}
+                {filterOption === 'mode_solution' && 'Tryb: Rozwiązanie'}
+                {filterOption === 'status_completed' && 'Status: Ukończone'}
+                {filterOption === 'status_running' && 'Status: W trakcie'}
+                {filterOption === 'status_failed' && 'Status: Błąd'}
+              </button>
+              {isFilterOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10">
+                  <button onClick={() => { setFilterOption('all'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'all' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Wszystkie</button>
+                  <div className="px-4 py-1 text-xs font-semibold text-slate-400 mt-1 uppercase">Tryb</div>
+                  <button onClick={() => { setFilterOption('mode_auto'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'mode_auto' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Auto</button>
+                  <button onClick={() => { setFilterOption('mode_problem'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'mode_problem' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Problem</button>
+                  <button onClick={() => { setFilterOption('mode_solution'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'mode_solution' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Rozwiązanie</button>
+                  <div className="px-4 py-1 text-xs font-semibold text-slate-400 mt-1 uppercase">Status</div>
+                  <button onClick={() => { setFilterOption('status_completed'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'status_completed' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Ukończone</button>
+                  <button onClick={() => { setFilterOption('status_running'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'status_running' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>W trakcie</button>
+                  <button onClick={() => { setFilterOption('status_failed'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'status_failed' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Błąd</button>
+                </div>
+              )}
+            </div>
+            <div className="relative">
+              <button
+                onClick={() => setIsExportOpen(!isExportOpen)}
+                className="flex items-center gap-2 text-sm text-[#0D2535] dark:text-slate-300 border border-[#E2E8F0] dark:border-[#333333] px-4 py-2 rounded-lg hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors"
+              >
+                <Download size={14} /> {t(language, 'dash_export')}
+              </button>
+              {isExportOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10">
+                  <button
+                    onClick={handleExportCSV}
+                    className="w-full text-left px-4 py-2 text-sm text-[#0D2535] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors"
+                  >
+                    CSV
+                  </button>
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full text-left px-4 py-2 text-sm text-[#0D2535] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors"
+                  >
+                    PDF
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-[#E2E8F0]">
+              <tr className="border-b border-[#E2E8F0] dark:border-[#333333]">
                 <th className="py-4 px-4 text-xs font-semibold text-slate-400 font-sans tracking-wide">
                   <div className="flex items-center gap-3">
                     <input type="checkbox" className="rounded border-slate-300 w-4 h-4 cursor-pointer accent-[#14B8A6]" />
@@ -301,10 +380,10 @@ export default function Dashboard() {
                 <tr
                   key={p.session_id}
                   onClick={() => navigate(`/discovery/${p.session_id}`)}
-                  className="border-b border-[#F1F5F9] last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="border-b border-[#F1F5F9] dark:border-[#333333]/60 last:border-0 hover:bg-slate-50 dark:hover:bg-[#222222] transition-colors cursor-pointer"
                 >
                   <td className="py-4 px-4">
-                    <div className="flex items-center gap-3 text-sm text-slate-500">
+                    <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
                       <input type="checkbox" className="rounded border-slate-300 w-4 h-4 cursor-pointer accent-[#14B8A6]" />
                       {String(idx + 1).padStart(2, '0')}
                     </div>
@@ -312,22 +391,22 @@ export default function Dashboard() {
                   <td className="py-4 px-4">
                     <Link
                       to={`/discovery/${p.session_id}`}
-                      className="font-sans font-medium text-[#0D2535] hover:text-[#14B8A6] transition-colors"
+                      className="font-sans font-medium text-[#0D2535] dark:text-slate-100 hover:text-[#14B8A6] transition-colors"
                     >
                       {p.project_name}
                     </Link>
                   </td>
-                  <td className="py-4 px-4 text-sm text-slate-500 font-sans capitalize">{p.mode}</td>
+                  <td className="py-4 px-4 text-sm text-slate-500 dark:text-slate-400 font-sans capitalize">{p.mode}</td>
                   <td className="py-4 px-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium font-sans ${STATUS_BADGE[p.status] || STATUS_BADGE.queued}`}>
                       {STATUS_LABEL[p.status] || p.status}
                     </span>
                   </td>
-                  <td className="py-4 px-4 text-sm text-slate-500 font-sans">
+                  <td className="py-4 px-4 text-sm text-slate-500 dark:text-slate-400 font-sans">
                     {new Date(p.created_at).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB')}
                   </td>
                   <td className="py-4 px-4 text-right">
-                    <button className="p-1.5 text-slate-400 hover:text-[#0D2535] transition-colors rounded hover:bg-slate-100">
+                    <button className="p-1.5 text-slate-400 hover:text-[#0D2535] dark:hover:text-slate-200 transition-colors rounded hover:bg-slate-100 dark:hover:bg-[#2A2A2A]">
                       <MoreHorizontal size={16} />
                     </button>
                   </td>

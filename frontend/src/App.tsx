@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import {
-  LayoutDashboard, Plus, MessageSquare, Search, Bell,
+  LayoutDashboard, Plus, MessageSquare, Search, Bell, Moon, Sun,
   Settings, LogOut, BookOpen, Users, Bot,
 } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
@@ -35,8 +35,7 @@ function Sidebar() {
     <>
       {/* Desktop Sidebar */}
       <aside
-        className="hidden md:flex w-64 h-screen flex-col shrink-0 sticky top-0"
-        style={{ backgroundColor: '#0D2535' }}
+        className="hidden md:flex w-64 h-screen flex-col shrink-0 sticky top-0 bg-[#0D2535] transition-colors"
       >
         {/* Logo */}
         <div className="px-6 pt-6 pb-6 mb-2">
@@ -137,8 +136,8 @@ function Sidebar() {
 
         {/* Funny Under Construction Popup */}
         {showLogoutPopup && (
-          <div className="absolute bottom-20 left-4 md:left-64 z-50 w-72 bg-white rounded-xl shadow-xl overflow-hidden border border-[#E2E8F0] animate-in slide-in-from-bottom-2 fade-in">
-            <div className="h-1 bg-[#FBBF24] w-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #FBBF24, #FBBF24 10px, #0D2535 10px, #0D2535 20px)' }}></div>
+          <div className="absolute bottom-20 left-4 md:left-64 z-50 w-72 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-xl overflow-hidden border border-[#E2E8F0] dark:border-[#333333] animate-in slide-in-from-bottom-2 fade-in">
+            <div className="h-1 bg-[#FBBF24] w-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #FBBF24, #FBBF24 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 20px)' }}></div>
             <div className="p-5 text-center">
               <span className="text-4xl mb-3 block">🚧</span>
               <h4 className="font-bold text-[#0D2535] mb-2 font-sans text-lg">Under Construction!</h4>
@@ -157,7 +156,7 @@ function Sidebar() {
       </aside>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-3 bg-[#0D2535] border-t border-[#1E3A5F]">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-3 bg-[#0D2535] border-t border-[#1E3A5F] transition-colors">
         {NAV_MAIN.map(item => (
           <NavLink
             key={item.to}
@@ -192,31 +191,44 @@ function Sidebar() {
 }
 
 function TopHeader() {
-  const { language, globalSearchQuery, setGlobalSearchQuery } = useAppStore()
+  const { language, globalSearchQuery, setGlobalSearchQuery, theme, toggleTheme } = useAppStore()
 
   return (
-    <header className="h-20 flex items-center justify-end px-4 md:px-8 bg-[#F8FAFC]">
+    <header className="h-20 flex items-center justify-end px-4 md:px-8 bg-[#F8FAFC] dark:bg-[#111111] border-b border-transparent dark:border-[#333333]/50 transition-colors">
       <div className="flex items-center gap-4 md:gap-6">
         {/* Search */}
-        <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-white shadow-sm border border-[#E2E8F0] min-w-[150px] md:min-w-[180px]">
+        <div className="flex items-center gap-3 px-4 py-2.5 rounded-full bg-white dark:bg-[#1A1A1A] shadow-sm border border-[#E2E8F0] dark:border-[#333333] min-w-[150px] md:min-w-[180px] transition-colors">
           <input
             type="text"
             value={globalSearchQuery}
             onChange={(e) => setGlobalSearchQuery(e.target.value)}
             placeholder={t(language, 'search_ph')}
-            className="flex-1 text-sm bg-transparent outline-none text-[#0D2535] placeholder:text-slate-400 text-left"
+            className="flex-1 text-sm bg-transparent outline-none text-[#0D2535] dark:text-slate-200 placeholder:text-slate-400 text-left transition-colors"
           />
           <Search size={16} className="text-slate-400" />
         </div>
 
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-[#222222] transition-colors auto-bg-glass shrink-0"
+          title={theme === 'dark' ? 'Przełącz na jasny motyw' : 'Przełącz na ciemny motyw'}
+        >
+          {theme === 'dark' ? (
+            <Sun size={20} className="text-[#0D2535] dark:text-slate-300" />
+          ) : (
+            <Moon size={20} className="text-[#0D2535] dark:text-slate-300" />
+          )}
+        </button>
+
         {/* Bell */}
-        <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white transition-colors shrink-0">
-          <Bell size={20} className="text-[#0D2535]" />
+        <button className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white dark:hover:bg-[#222222] transition-colors auto-bg-glass shrink-0">
+          <Bell size={20} className="text-[#0D2535] dark:text-slate-300" />
         </button>
 
         {/* Avatar */}
         <div
-          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-mono font-bold shrink-0"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-mono font-bold shrink-0 shadow-sm"
           style={{ backgroundColor: '#14B8A6' }}
         >
           PD
@@ -227,10 +239,20 @@ function TopHeader() {
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const theme = useAppStore(s => s.theme)
+
+  useEffect(() => {
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [theme])
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <Sidebar />
-      <div className="flex-1 flex flex-col min-h-screen bg-[#F8FAFC] pb-16 md:pb-0 w-full overflow-x-hidden">
+      <div className="flex-1 flex flex-col min-h-screen bg-[#F8FAFC] dark:bg-[#141414] pb-16 md:pb-0 w-full overflow-x-hidden transition-colors">
         <TopHeader />
         <main className="flex-1 overflow-auto">
           {children}

@@ -160,7 +160,7 @@ export default function Report() {
   return (
     <div className="max-w-5xl mx-auto p-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link to="/" className="text-slate-500 hover:text-[#0D2535] text-sm font-sans font-medium transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-white border border-[#E2E8F0] rounded-lg shadow-sm">
+        <Link to="/" className="text-slate-500 hover:text-[#0D2535] dark:hover:text-slate-200 text-sm font-sans font-medium transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] rounded-lg shadow-sm">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
           Back to Dashboard
         </Link>
@@ -168,7 +168,7 @@ export default function Report() {
 
       {/* Progress view */}
       {isRunning && (
-        <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E2E8F0] mb-8">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-8 shadow-sm border border-[#E2E8F0] dark:border-[#333333] mb-8 transition-colors">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-[#F0FDFA] flex items-center justify-center">
               <svg className="w-5 h-5 text-[#14B8A6] animate-spin" viewBox="0 0 24 24" fill="none">
@@ -224,7 +224,7 @@ export default function Report() {
       {result && result.jtbd && (
         <div className="space-y-8">
           {/* Header & Metrics block */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-[#E2E8F0]">
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-8 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
             <div className="flex items-start justify-between gap-6 flex-wrap mb-8">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
@@ -248,7 +248,7 @@ export default function Report() {
                     href={api.exportPdfUrl(result.session_id)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 bg-white border border-[#E2E8F0] shadow-sm rounded-lg text-sm font-sans font-medium text-[#0D2535] hover:bg-slate-50 transition-colors flex items-center gap-2"
+                    className="px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] shadow-sm rounded-lg text-sm font-sans font-medium text-[#0D2535] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors flex items-center gap-2"
                   >
                     <Download size={16} className="text-slate-400" />
                     PDF
@@ -269,7 +269,7 @@ export default function Report() {
                         ? 'bg-emerald-500 text-white'
                         : slackResult && !slackResult.sent
                           ? 'bg-red-100 text-red-700 border border-red-300'
-                          : 'bg-white border border-[#E2E8F0] text-[#0D2535] hover:bg-slate-50'
+                          : 'bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] text-[#0D2535] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2A2A2A]'
                       }`}
                   >
                     {slackSending
@@ -289,7 +289,7 @@ export default function Report() {
                     title="Eksportuj do Google Docs"
                     className={`px-4 py-2 shadow-sm rounded-lg text-sm font-sans font-semibold transition-colors flex items-center gap-2 ${gdocsResult
                         ? 'bg-blue-500 text-white'
-                        : 'bg-white border border-[#E2E8F0] text-[#0D2535] hover:bg-slate-50'
+                        : 'bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] text-[#0D2535] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2A2A2A]'
                       }`}
                   >
                     {gdocsSending
@@ -346,9 +346,9 @@ export default function Report() {
           </div>
 
           {/* JTBD Structure */}
-          <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+          <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
             <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+              <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                 <Target size={16} className="text-slate-600" />
               </div>
               <h2 className="font-mono font-bold text-lg text-[#0D2535]">Jobs-to-be-Done Framework</h2>
@@ -365,7 +365,7 @@ export default function Report() {
                     <span className="text-xs font-sans font-semibold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1.5 rounded-t-lg border border-[#E2E8F0] border-b-0 w-max">
                       {item.label}
                     </span>
-                    <div className="bg-white border border-[#E2E8F0] p-4 rounded-b-lg rounded-tr-lg flex-1 shadow-sm">
+                    <div className="bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] p-4 rounded-b-lg rounded-tr-lg flex-1 shadow-sm">
                       <p className="text-[#0D2535] font-sans leading-relaxed">{item.value}</p>
                     </div>
                   </div>
@@ -391,9 +391,9 @@ export default function Report() {
 
           {/* Forces Diagram */}
           {result.forces_report && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
               <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                   <Zap size={16} className="text-[#F59E0B]" />
                 </div>
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Forces Diagram</h2>
@@ -415,9 +415,9 @@ export default function Report() {
 
           {/* Reasoning */}
           {result.jtbd.reasoning && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
               <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                   <FileSearch size={16} className="text-indigo-500" />
                 </div>
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Analysis & Reasoning</h2>
@@ -432,9 +432,9 @@ export default function Report() {
 
           {/* Assumption Map */}
           {result.assumption_map && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
               <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                   <Map size={16} className="text-[#10B981]" />
                 </div>
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Assumption Map</h2>
@@ -447,9 +447,9 @@ export default function Report() {
 
           {/* Synthetic Archetypes */}
           {result.synthetic_archetypes && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
               <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                   <Users size={16} className="text-[#3B82F6]" />
                 </div>
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Synthetic Personas</h2>
@@ -462,7 +462,7 @@ export default function Report() {
                     ))}
                   </div>
                 ) : (
-                  <div className="prose prose-slate prose-sm max-w-none font-sans bg-white p-6 rounded-xl border border-slate-200">
+                  <div className="prose prose-slate prose-sm max-w-none font-sans bg-white dark:bg-[#1A1A1A] p-6 rounded-xl border border-slate-200 dark:border-[#333333]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{result.synthetic_archetypes}</ReactMarkdown>
                   </div>
                 )}
@@ -472,9 +472,9 @@ export default function Report() {
 
           {/* Competitive Research */}
           {result.competitive_report && (
-            <div className="bg-white rounded-2xl shadow-sm border border-[#E2E8F0] overflow-hidden">
+            <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl shadow-sm border border-[#E2E8F0] dark:border-[#333333] overflow-hidden">
               <div className="p-6 border-b border-[#E2E8F0] bg-slate-50 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                <div className="w-8 h-8 rounded-lg bg-white dark:bg-[#2A2A2A] border border-slate-200 dark:border-[#333333] flex items-center justify-center shadow-sm">
                   <FileText size={16} className="text-slate-600" />
                 </div>
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Competitive Analysis</h2>
