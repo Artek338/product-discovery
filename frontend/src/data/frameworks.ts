@@ -66,7 +66,7 @@ export const FRAMEWORKS: Framework[] = [
         aiAutomation: 'yes',
         complexity: 3,
         cycleDuration: '2–4 tygodnie per iteracja',
-        imageUrl: 'https://substackcdn.com/image/fetch/$s_!iC6S!,w_1456,c_limit,f_webp,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F4b333f9b-afd8-4139-80e9-2ab40d871060_936x453.png',
+        imageUrl: 'https://substackcdn.com/image/fetch/$s_!m5vx!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Ff9db3e59-0e5c-49c7-881b-2802312b34a9_1126x673.png',
         examples: [
             'EXPLORE: analiza churnu w danych + 5 wywiadów wychodzących → odkrycie że użytkownicy odchodzą przez brak onboarding checklist (nie przez cenę)',
             'IDEATE: 3 różne podejścia do onboardingu: guided tour / progress bar / personal coach — bez oceniania które jest "lepsze"',
