@@ -22,8 +22,18 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
   const [result, setResult] = useState<ExportResult | null>(null)
   const [error, setError] = useState('')
   const firstInputRef = useRef<HTMLInputElement>(null)
+  const triggerRef = useRef<Element | null>(null)
 
-  // Accessibility: Focus Trap / Escape listener
+  // Przywracanie focusu po zamknięciu + Escape
+  useEffect(() => {
+    triggerRef.current = document.activeElement
+    return () => {
+      if (triggerRef.current instanceof HTMLElement) {
+        triggerRef.current.focus()
+      }
+    }
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose()
@@ -59,6 +69,7 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="miro-modal-title"
       data-testid="miro-modal"
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ backgroundColor: 'rgba(13,37,53,0.6)' }}
@@ -69,10 +80,10 @@ export default function MiroExportModal({ sessionId, onClose }: Props) {
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
           <div className="flex items-center gap-2">
             <Layers size={18} style={{ color: '#14B8A6' }} />
-            <h2 className="font-mono font-bold text-[#0D2535]">Eksport do Miro</h2>
+            <h2 id="miro-modal-title" className="font-mono font-bold text-[#0D2535]">Eksport do Miro</h2>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-[#0D2535] transition-colors">
-            <X size={18} />
+          <button onClick={onClose} aria-label="Zamknij modal eksportu Miro" className="text-slate-400 hover:text-[#0D2535] transition-colors">
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 

@@ -1,23 +1,38 @@
 """
-Projects routes — lista projektów/sesji.
+Projects routes — lista projektów/sesji z paginacją.
 """
 import json
+import math
 from typing import List
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
+from pydantic import BaseModel
 
-from backend.db import list_sessions
+from backend.db import list_sessions, count_sessions
 from backend.models import ProjectSummary
 
 router = APIRouter()
 
 
-@router.get("", response_model=List[ProjectSummary])
-async def get_projects():
-    """Zwraca listę wszystkich sesji discovery z podstawowymi metadanymi."""
-    sessions = await list_sessions()
-    result = []
+class ProjectsPage(BaseModel):
+    items: List[ProjectSummary]
+    total: int
+    page: int
+    pages: int
+    size: int
 
+
+@router.get("", response_model=ProjectsPage)
+async def get_projects(
+    page: int = Query(1, ge=1, description="Numer strony (1-based)"),
+    size: int = Query(50, ge=1, le=200, description="Liczba wyników na stronę"),
+):
+    """Zwraca stronicowaną listę sesji discovery z podstawowymi metadanymi."""
+    offset = (page - 1) * size
+    sessions = await list_sessions(limit=size, offset=offset)
+    total = await count_sessions()
+
+    result = []
     for s in sessions:
         verdict = None
         confidence = None
@@ -46,4 +61,10 @@ async def get_projects():
             )
         )
 
-    return result
+    return ProjectsPage(
+        items=result,
+        total=total,
+        page=page,
+        pages=max(1, math.ceil(total / size)),
+        size=size,
+    )

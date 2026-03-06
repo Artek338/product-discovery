@@ -20,7 +20,7 @@ export default function Dashboard() {
   const [filterOption, setFilterOption] = useState<string>('all')
 
   useEffect(() => {
-    api.getProjects().then(setProjects).catch(console.error)
+    api.getProjects().then(page => setProjects(page.items)).catch(console.error)
   }, [setProjects])
 
   const STATUS_LABEL: Record<string, string> = {
@@ -69,16 +69,14 @@ export default function Dashboard() {
       new Date(p.created_at).toLocaleDateString(language === 'pl' ? 'pl-PL' : 'en-GB')
     ])
 
-    const csvContent = "data:text/csv;charset=utf-8,"
-      + [headers, ...rows].map(row => row.join(",")).join("\n");
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "projekty_zestawienie.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const csvContent = [headers, ...rows].map(row => row.join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = 'projekty_zestawienie.csv'
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleExportPDF = () => {
@@ -299,7 +297,7 @@ export default function Dashboard() {
                 {filterOption === 'status_failed' && 'Status: Błąd'}
               </button>
               {isFilterOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10">
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10 max-sm:left-0 max-sm:right-auto">
                   <button onClick={() => { setFilterOption('all'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'all' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Wszystkie</button>
                   <div className="px-4 py-1 text-xs font-semibold text-slate-400 mt-1 uppercase">Tryb</div>
                   <button onClick={() => { setFilterOption('mode_auto'); setIsFilterOpen(false) }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-[#2A2A2A] ${filterOption === 'mode_auto' ? 'text-[#14B8A6] font-medium' : 'text-[#0D2535] dark:text-slate-300'}`}>Auto</button>
@@ -320,7 +318,7 @@ export default function Dashboard() {
                 <Download size={14} /> {t(language, 'dash_export')}
               </button>
               {isExportOpen && (
-                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10">
+                <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-[#1A1A1A] rounded-lg shadow-lg border border-[#E2E8F0] dark:border-[#333333] py-1 z-10 max-sm:left-0 max-sm:right-auto">
                   <button
                     onClick={handleExportCSV}
                     className="w-full text-left px-4 py-2 text-sm text-[#0D2535] dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors"

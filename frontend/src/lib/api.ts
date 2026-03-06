@@ -7,7 +7,7 @@ import type {
   DiscoveryRunResponse,
   DiscoveryStatusResponse,
   GDocsExportResponse,
-  ProjectSummary,
+  ProjectsPage,
   SimulatorAnswer,
   SimulatorQuestionRequest,
   SlackNotifyResponse,
@@ -48,8 +48,8 @@ export const api = {
 
   // ============ Projects ============
 
-  getProjects: (): Promise<ProjectSummary[]> =>
-    request('/projects'),
+  getProjects: (page = 1, size = 50): Promise<ProjectsPage> =>
+    request(`/projects?page=${page}&size=${size}`),
 
   // ============ Simulator ============
 

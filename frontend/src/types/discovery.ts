@@ -83,6 +83,14 @@ export interface ProjectSummary {
   created_at: string
 }
 
+export interface ProjectsPage {
+  items: ProjectSummary[]
+  total: number
+  page: number
+  pages: number
+  size: number
+}
+
 // ============ Simulator ============
 
 export interface SyntheticProfile {
@@ -128,7 +136,7 @@ export interface AppSettings {
   serper_api_key_set: boolean
   brave_api_key_set: boolean
   miro_access_token_set: boolean
-  miro_board_id: string
+  miro_board_id_set: boolean
   slack_webhook_url_set: boolean
   slack_auto_notify: boolean
   llm_model: string

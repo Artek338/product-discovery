@@ -69,7 +69,7 @@ function Sidebar() {
               style={({ isActive }) =>
                 isActive
                   ? { borderLeft: '3px solid #14B8A6', color: 'white' }
-                  : { color: '#7A9BB0', borderLeft: '3px solid transparent' }
+                  : { color: '#8BB5CC', borderLeft: '3px solid transparent' }
               }
             >
               <item.icon size={18} />
@@ -95,7 +95,7 @@ function Sidebar() {
               style={({ isActive }) =>
                 isActive
                   ? { borderLeft: '3px solid #14B8A6', color: 'white' }
-                  : { color: '#7A9BB0', borderLeft: '3px solid transparent' }
+                  : { color: '#8BB5CC', borderLeft: '3px solid transparent' }
               }
             >
               <item.icon size={18} />
@@ -117,7 +117,7 @@ function Sidebar() {
             style={({ isActive }) =>
               isActive
                 ? { borderLeft: '3px solid #14B8A6', color: 'white' }
-                : { color: '#7A9BB0', borderLeft: '3px solid transparent' }
+                : { color: '#8BB5CC', borderLeft: '3px solid transparent' }
             }
           >
             <Settings size={18} />
@@ -127,29 +127,43 @@ function Sidebar() {
           <button
             onClick={() => setShowLogoutPopup(true)}
             className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-sm font-sans transition-all duration-200 hover:text-white hover:bg-white/5 relative"
-            style={{ color: '#7A9BB0', borderLeft: '3px solid transparent' }}
+            style={{ color: '#8BB5CC', borderLeft: '3px solid transparent' }}
           >
             <LogOut size={18} />
             {t(language, 'nav_logout')}
           </button>
         </div>
 
-        {/* Funny Under Construction Popup */}
+        {/* Logout confirmation popup */}
         {showLogoutPopup && (
-          <div className="absolute bottom-20 left-4 md:left-64 z-50 w-72 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-xl overflow-hidden border border-[#E2E8F0] dark:border-[#333333] animate-in slide-in-from-bottom-2 fade-in">
-            <div className="h-1 bg-[#FBBF24] w-full" style={{ backgroundImage: 'repeating-linear-gradient(45deg, #FBBF24, #FBBF24 10px, rgba(0,0,0,0.2) 10px, rgba(0,0,0,0.2) 20px)' }}></div>
-            <div className="p-5 text-center">
-              <span className="text-4xl mb-3 block">🚧</span>
-              <h4 className="font-bold text-[#0D2535] mb-2 font-sans text-lg">Under Construction!</h4>
-              <p className="text-sm text-slate-500 mb-5 font-sans leading-relaxed">
-                {language === 'pl' ? 'Pssssst... Właściwie to wpuściliśmy Cię tu pobocznymi drzwiami.\nSystem logowania i uwierzytelniania wciąż powstaje! Skazano Cię na siedzenie tutaj. 😉' : "Pssssst... We actually sneaked you in here through the back door.\nThe auth system is still being built! You're trapped for now. 😉"}
+          <div className="absolute bottom-20 left-4 z-50 w-72 bg-white dark:bg-[#1A1A1A] rounded-xl shadow-xl overflow-hidden border border-[#E2E8F0] dark:border-[#333333]">
+            <div className="p-5">
+              <h4 className="font-bold text-[#0D2535] dark:text-slate-100 mb-1 font-sans text-base">
+                {language === 'pl' ? 'Wylogować się?' : 'Sign out?'}
+              </h4>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-4 font-sans">
+                {language === 'pl'
+                  ? 'Sesja Google zostanie zakończona. Lokalne dane pozostaną.'
+                  : 'Your Google session will be cleared. Local data stays.'}
               </p>
-              <button
-                onClick={() => setShowLogoutPopup(false)}
-                className="w-full bg-[#14B8A6] text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#0D9488] transition-colors"
-              >
-                {language === 'pl' ? 'Wracam do pracy!' : 'Take me back to work!'}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    try { await fetch('/api/auth/logout', { method: 'POST' }) } catch (_) { /* ignore */ }
+                    setShowLogoutPopup(false)
+                    window.location.href = '/'
+                  }}
+                  className="flex-1 bg-[#EF4444] text-white py-2 rounded-lg text-sm font-semibold hover:bg-[#DC2626] transition-colors"
+                >
+                  {language === 'pl' ? 'Wyloguj' : 'Sign out'}
+                </button>
+                <button
+                  onClick={() => setShowLogoutPopup(false)}
+                  className="flex-1 border border-[#E2E8F0] dark:border-[#333333] text-[#0D2535] dark:text-slate-300 py-2 rounded-lg text-sm font-semibold hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors"
+                >
+                  {language === 'pl' ? 'Anuluj' : 'Cancel'}
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -165,7 +179,7 @@ function Sidebar() {
             className={({ isActive }) =>
               `flex flex-col items-center gap-1 p-2 rounded-lg text-[10px] font-sans transition-all duration-200 ${isActive
                 ? 'text-[#14B8A6] font-medium'
-                : 'text-[#7A9BB0] font-normal'
+                : 'text-[#8BB5CC] font-normal'
               }`
             }
           >
@@ -178,7 +192,7 @@ function Sidebar() {
           className={({ isActive }) =>
             `flex flex-col items-center gap-1 p-2 rounded-lg text-[10px] font-sans transition-all duration-200 ${isActive
               ? 'text-[#14B8A6] font-medium'
-              : 'text-[#7A9BB0] font-normal'
+              : 'text-[#8BB5CC] font-normal'
             }`
           }
         >

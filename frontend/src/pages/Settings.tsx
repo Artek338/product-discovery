@@ -142,7 +142,7 @@ export default function Settings() {
       setServerSettings(s)
       setDataDir(s.data_dir)
       setSlackAuto(s.slack_auto_notify)
-      setMiroBoard(s.miro_board_id)
+      // miro_board_id nie jest zwracany z serwera (bezpieczeństwo) — pole pozostaje puste
       setLlmModel(s.llm_model)
       setDiscoveryMock(s.discovery_mock)
       // Nie wypełniamy pól kluczy — użytkownik musi je wpisać świadomie
@@ -386,7 +386,7 @@ export default function Settings() {
             title={t(language, 'set_miro_title')}
             badge={
               <StatusBadge
-                ok={!!serverSettings?.miro_access_token_set && !!serverSettings?.miro_board_id}
+                ok={!!serverSettings?.miro_access_token_set && !!serverSettings?.miro_board_id_set}
                 labelOk={t(language, 'set_configured')}
                 labelNo={t(language, 'set_not_configured')}
               />
@@ -454,6 +454,8 @@ export default function Settings() {
             <div className="relative">
               <input
                 type="checkbox"
+                role="switch"
+                aria-checked={slackAuto}
                 checked={slackAuto}
                 onChange={e => setSlackAuto(e.target.checked)}
                 className="sr-only"
@@ -547,6 +549,8 @@ export default function Settings() {
             <div className="relative">
               <input
                 type="checkbox"
+                role="switch"
+                aria-checked={discoveryMock}
                 checked={discoveryMock}
                 onChange={e => setDiscoveryMock(e.target.checked)}
                 className="sr-only"

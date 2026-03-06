@@ -44,6 +44,8 @@ a ForcesDiagramNode blokuje GO gdy Anxiety > Pull (użytkownik nie zmieni narzę
 
 from __future__ import annotations
 
+import asyncio
+import re
 from dataclasses import dataclass
 from typing import Union
 
@@ -53,6 +55,24 @@ from product_discovery.workflows.discovery_state import DiscoveryResult, Discove
 from product_discovery.agents.business_analyst.agent import ba_agent, ba_agent_haiku
 from product_discovery.agents.business_analyst.schemas import JTBDAnalysisResult
 from product_discovery.agents.synthetic_user.agent import generate_archetypes
+
+
+async def _run_with_retry(agent, prompt: str, max_retries: int = 2):
+    """
+    Wywołuje agenta z retry i exponential backoff.
+    Próby: 1 + max_retries. Czeka 2^attempt sekund między próbami (2s, 4s).
+    """
+    last_exc: Exception | None = None
+    for attempt in range(max_retries + 1):
+        try:
+            return await agent.run(prompt)
+        except Exception as exc:
+            last_exc = exc
+            if attempt < max_retries:
+                wait = 2 ** attempt
+                print(f"      ⚠️ Agent retry {attempt + 1}/{max_retries}: {type(exc).__name__} — czekam {wait}s...")
+                await asyncio.sleep(wait)
+    raise last_exc  # type: ignore[misc]
 
 
 # ============================================================================
@@ -178,7 +198,7 @@ FORMAT INSIGHTÓW (każdy insight to osobna obserwacja z wywiadu):
 Jeśli opis NIE zawiera wywiadów behawioralnych — wyciągnij to co jest i zaznacz brak.
 """
 
-        result = await ba_agent.run(prompt)
+        result = await _run_with_retry(ba_agent, prompt)
 
         # Budujemy insighty z WSZYSTKICH pól JTBDAnalysisResult.
         # Dzięki temu zawsze mamy ≥3 insightów gdy agent zwrócił poprawny wynik.
@@ -257,7 +277,7 @@ class CompetitiveResearchNode(BaseNode[DiscoveryState]):
 Zwróć wynik jako JTBDAnalysisResult z competing_solutions wypełnionym na podstawie researchu.
 """
 
-        result = await ba_agent.run(category_prompt)
+        result = await _run_with_retry(ba_agent, category_prompt)
 
         # Budujemy competitive_report z competing_solutions
         if result.output.competing_solutions:
@@ -355,71 +375,90 @@ class EvidenceGradingNode(BaseNode[DiscoveryState]):
 
     def _grade_evidence(self, insights: list[str], interview_notes: str = "") -> str:
         """
-        Classifier bazujący na słowach kluczowych w insightach i notatkach z wywiadów.
+        Classifier bazujący na słowach kluczowych z granicami wyrazów (regex \b).
 
-        Uwaga: jeśli interview_notes zawierają markery jakości wywiadów (💎 DETAILED,
-        opisowe workaroundy, konkretne narzędzia) — to jest silny sygnał 2_Past_Behavior.
-        Bez interview_notes wymagamy ściślejszych słów kluczowych żeby uniknąć
+        Używa re.search z \b żeby unikać false positives:
+        - "kupił" pasuje, "kupiłby" (warunkowy) NIE pasuje
+        - Python 3 re obsługuje Unicode \b, więc polskie litery (ł,ą,ę) działają poprawnie.
+
+        Bez interview_notes wymagamy silniejszych sygnałów żeby uniknąć
         fałszywego 2_Past_Behavior z opisu pomysłu foundera.
         """
         insights_text = " ".join(insights).lower()
         notes_text = interview_notes.lower() if interview_notes else ""
+        all_text = insights_text + " " + notes_text
 
-        # Poziom 5: Gotówka
-        cash_kw = ["zapłacił", "kupił", "zakupił", "paid", "purchased", "bought"]
-        if any(kw in insights_text for kw in cash_kw):
+        def has_any(patterns: list[str], text: str) -> bool:
+            return any(re.search(p, text, re.UNICODE) for p in patterns)
+
+        # Poziom 5: Gotówka — tylko faktyczne zakupy, NIE warunkowe ("kupiłby")
+        # \b działa dla Unicode: "kupił" != "kupiłby" bo ł→b = \w→\w (brak granicy)
+        cash_patterns = [
+            r'\bzapłacił[aem]?\b', r'\bkupił[aem]?\b', r'\bzakupił[aem]?\b',
+            r'\bpaid\b', r'\bpurchased\b', r'\bbought\b',
+        ]
+        if has_any(cash_patterns, all_text):
             return "5_Cash"
 
-        # Poziom 4: Finansowy (depozyt, pre-order)
-        financial_kw = ["depozyt", "wpłacił", "pre-order", "deposit", "preorder", "zarezerwował"]
-        if any(kw in insights_text for kw in financial_kw):
+        # Poziom 4: Finansowy — depozyt, pre-order
+        financial_patterns = [
+            r'\bdepozyt\b', r'\bwpłacił[aem]?\b', r'\bpre-order\b',
+            r'\bdeposit\b', r'\bpreorder\b', r'\bzarezerwował[aem]?\b',
+        ]
+        if has_any(financial_patterns, all_text):
             return "4_Financial"
 
-        # Poziom 3: Zaangażowanie czasowe (beta, waitlist)
-        time_kw = ["waitlist", "beta", "zapisał się", "signed up", "waiting list"]
-        if any(kw in insights_text for kw in time_kw):
-            return "3_Time_Commitment"
+        # Poziom 3: Zaangażowanie czasowe (beta, waitlist) + warunek 1. osoby w notatkach
+        time_patterns = [r'\bwaitlist\b', r'\bbeta\b', r'\bzapisał\b', r'\bsigned up\b', r'\bwaiting list\b']
+        if has_any(time_patterns, all_text):
+            # Dodatkowe sprawdzenie: czy to o rozmówcy (1. osoba), nie o kimś innym?
+            first_person = [r'\bja\b', r'\bmnie\b', r'\bmój\b', r'\bi\b', r'\bbyłem\b', r'\bbyłam\b',
+                            r'\bzapisał?em\b', r'\bzapisał?am\b']
+            # Jeśli mamy notatki — wymagamy zaimka osobowego; bez notatek — akceptujemy
+            if not notes_text or has_any(first_person, notes_text):
+                return "3_Time_Commitment"
 
-        # Poziom 2 — STRONG: markery z wywiadów (💎 DETAILED, workaroundy z named tools)
-        # Te słowa kluczowe są mocne tylko gdy są w kontekście wywiadów (nie opisu pomysłu)
+        # Poziom 2 — STRONG: markery z wywiadów
         if notes_text:
-            # Jeśli mamy notatki z wywiadów — szukamy dowodów behawioralnych w nich
             strong_behavioral_in_notes = [
-                "detailed", "💎", "pokazał", "showed", "ręczny arkusz",
-                "workaround", "google sheets", "notion", "excel", "notes w kratkę",
-                "stracił klienta", "lost client", "przeoczony", "missed deadline",
-                "brudny sekret", "wstydzę się", "last time", "ostatnim razie",
+                r'💎', r'\bdetailed\b', r'\bpokaz[aełi]+\b', r'\bshowed\b',
+                r'ręczny arkusz', r'\bworkaround\b', r'google sheets', r'\bnotion\b',
+                r'\bexcel\b', r'stracił\b.*klient', r'lost.*client',
+                r'\bprzeoczony\b', r'missed deadline', r'ostatnim razie', r'last time',
             ]
-            if any(kw in notes_text for kw in strong_behavioral_in_notes):
+            if has_any(strong_behavioral_in_notes, notes_text):
                 return "2_Past_Behavior"
 
-            # Miękkie behawioralne — w notatkach z wywiadów to wystarczy
+            # Miękkie behawioralne — w notatkach wystarczą
             soft_behavioral_in_notes = [
-                "używa", "korzysta", "zbudował", "stworzył", "codziennie",
-                "uses", "built", "daily", "process", "workflow",
+                r'\bużywa\b', r'\bkorzysta\b', r'\bzbudował[aem]?\b', r'\bstworzył[aem]?\b',
+                r'\bcodziennie\b', r'\buses\b', r'\bbuilt\b', r'\bdaily\b',
+                r'\bprocess\b', r'\bworkflow\b',
             ]
-            if any(kw in notes_text for kw in soft_behavioral_in_notes):
+            if has_any(soft_behavioral_in_notes, notes_text):
                 return "2_Past_Behavior"
 
-        # Poziom 2 — tylko z insightów (bez notatek z wywiadów)
-        # Wymagamy silniejszych słów kluczowych żeby uniknąć fałszywego poziomu z opisu pomysłu
+        # Poziom 2 — z insightów (silniejsze wymagania bez notatek)
         strong_behavioral_in_insights = [
-            "pokazał", "pokazała", "pokazali", "showed",
-            "stracił", "stracili", "lost",
-            "zbudował", "stworzył", "built", "created",
-            "past behavior", "zachowanie z przeszłości",
-            "ostatnim razie", "last time",
-            "3 na", "4 na", "5 na",  # frakcje respondentów
+            r'\bpokaz[aełi]+\b', r'\bshowed\b',
+            r'\bstracił[aem]?\b', r'\blost\b',
+            r'\bzbudował[aem]?\b', r'\bbuilt\b', r'\bcreated\b',
+            r'ostatnim razie', r'last time',
+            r'\d na \d',  # frakcje respondentów: "3 na 5"
         ]
-        if any(kw in insights_text for kw in strong_behavioral_in_insights):
+        if has_any(strong_behavioral_in_insights, insights_text):
             return "2_Past_Behavior"
 
-        # Poziom 1: Preferencje (obietnice zakupu — bez działań z przeszłości)
-        preference_kw = ["kupiłby", "zapłaciłby", "would pay", "would buy", "chciałby", "chciałbym"]
-        if any(kw in insights_text for kw in preference_kw):
+        # Poziom 1: Preferencje (hipotetyczne obietnice, formy warunkowe)
+        preference_patterns = [
+            r'\bkupił[ao]?by\b', r'\bzapłacił[ao]?by\b',
+            r'\bwould pay\b', r'\bwould buy\b',
+            r'\bchciałby\b', r'\bchciałbym\b', r'\bchciałabym?\b',
+        ]
+        if has_any(preference_patterns, all_text):
             return "1_Preference"
 
-        # Poziom 0: Opinie (brak konkretnych dowodów behawioralnych)
+        # Poziom 0: Opinie
         return "0_Opinion"
 
 
@@ -505,7 +544,7 @@ ZASADA WERDYKTU:
 - Jeśli SWITCH_LIKELY lub SWITCH_POSSIBLE + silny Push → kontynuuj z analizą JTBD
 """
 
-        result = await ba_agent.run(forces_prompt)
+        result = await _run_with_retry(ba_agent, forces_prompt)
 
         # Zapisujemy surowy reasoning jako forces_diagram do state
         ctx.state.forces_diagram = result.output.reasoning if result.output.reasoning else ""
@@ -626,7 +665,7 @@ ZASADY dla pól tekstowych:
 [2-3 konkretne kroki walidacyjne z kryterium sukcesu. Format: "Zrób X → Kryterium sukcesu: Y"]
 """
 
-        result = await ba_agent.run(synthesis_prompt)
+        result = await _run_with_retry(ba_agent, synthesis_prompt)
         ctx.state.jtbd_result = result.output  # Zapisujemy do state
 
         print(f"      Werdykt: {result.output.verdict} (confidence: {result.output.confidence}%)")
@@ -705,7 +744,7 @@ Użyj tych samych wartości verdict/evidence/confidence co w analizie JTBD powy�
 
         try:
             # Haiku wystarczy — zadanie strukturalne bez potrzeby głębokiej analizy
-            result = await ba_agent_haiku.run(assumption_prompt)
+            result = await _run_with_retry(ba_agent_haiku, assumption_prompt)
 
             # Zapisujemy mapę założeń do state
             if result.output.reasoning:
@@ -719,6 +758,32 @@ Użyj tych samych wartości verdict/evidence/confidence co w analizie JTBD powy�
         except Exception as e:
             print(f"      ⚠️ Nie udało się wygenerować mapy założeń: {e}")
             ctx.state.assumption_map = ["Błąd generowania mapy założeń — sprawdź ręcznie"]
+
+        # BLOKER: FATAL assumptions bez dowodów Level 2+ blokują werdykt GO
+        verdict = getattr(ctx.state.jtbd_result, 'verdict', 'NEEDS_MORE_DATA')
+        if verdict == 'GO' and ctx.state.assumption_map:
+            assumption_text = "\n".join(ctx.state.assumption_map)
+            if 'FATAL' in assumption_text.upper():
+                # Znajdź wiersze tabel w sekcji FATAL z słabymi dowodami
+                weak_evidence_markers = ['0_opinion', '1_preference', 'brak dowod', '| brak', 'nie ma dowod']
+                fatal_table_rows = [
+                    line for line in ctx.state.assumption_map
+                    if '|' in line and 'fatal' in line.lower()
+                ]
+                unvalidated = [
+                    row for row in fatal_table_rows
+                    if any(m in row.lower() for m in weak_evidence_markers)
+                ]
+                if unvalidated:
+                    print(f"      ❌ Znaleziono {len(unvalidated)} niezwalidowane FATAL assumptions — blokuję GO")
+                    ctx.state.missing_data_reason = (
+                        f"Werdykt GO wymaga walidacji FATAL assumptions "
+                        f"({len(unvalidated)} bez dowodów ≥ Level 2_Past_Behavior).\n\n"
+                        "Przetestuj te założenia przed budowaniem:\n"
+                        + "\n".join(f"  → {row.strip()[:120]}" for row in unvalidated[:3])
+                        + "\n\nZbierz dowody behawioralne i uruchom Discovery ponownie."
+                    )
+                    return UserInputNeededNode()
 
         return ScorecardNode()
 

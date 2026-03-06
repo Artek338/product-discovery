@@ -42,7 +42,9 @@ async def generate_archetypes(request: ArchetypesRequest):
             for a in archetypes
         ]
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import logging
+        logging.getLogger(__name__).exception("Błąd generowania archetypów")
+        raise HTTPException(status_code=500, detail="Nie udało się wygenerować archetypów. Sprawdź klucz API i spróbuj ponownie.")
 
 
 @router.post("/archetypes/stream")
@@ -105,4 +107,6 @@ async def ask_question(request: SimulatorQuestionRequest):
             follow_up_suggested=response.follow_up_suggested,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import logging
+        logging.getLogger(__name__).exception("Błąd symulacji odpowiedzi")
+        raise HTTPException(status_code=500, detail="Nie udało się wygenerować odpowiedzi. Sprawdź klucz API i spróbuj ponownie.")

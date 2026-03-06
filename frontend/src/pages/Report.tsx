@@ -160,8 +160,13 @@ export default function Report() {
   return (
     <div className="max-w-5xl mx-auto p-8">
       <div className="flex items-center gap-3 mb-6">
-        <Link to="/" className="text-slate-500 hover:text-[#0D2535] dark:hover:text-slate-200 text-sm font-sans font-medium transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] rounded-lg shadow-sm">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+        <Link
+          to="/"
+          data-testid="back-to-dashboard"
+          aria-label="Wróć do Dashboardu"
+          className="text-slate-500 hover:text-[#0D2535] dark:hover:text-slate-200 text-sm font-sans font-medium transition-colors flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] rounded-lg shadow-sm"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
           Back to Dashboard
         </Link>
       </div>
@@ -223,6 +228,51 @@ export default function Report() {
       {/* Full report */}
       {result && result.jtbd && (
         <div className="space-y-8">
+
+          {/* Executive Summary — PM widzi verdict natychmiast */}
+          <div
+            data-testid="executive-summary"
+            className={`rounded-2xl p-6 text-white ${
+              result.jtbd.verdict === 'GO'
+                ? 'bg-gradient-to-r from-teal-600 to-teal-700'
+                : result.jtbd.verdict === 'NO-GO'
+                ? 'bg-gradient-to-r from-red-600 to-red-700'
+                : 'bg-gradient-to-r from-amber-500 to-amber-600'
+            }`}
+          >
+            <div className="flex items-start justify-between gap-6 flex-wrap">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-widest opacity-70 mb-1 font-sans">
+                  Werdykt Discovery
+                </p>
+                <h2 className="font-mono font-bold text-3xl mb-3">{result.jtbd.verdict}</h2>
+                <p className="text-sm opacity-90 leading-relaxed max-w-2xl font-sans">
+                  {result.jtbd.reasoning
+                    ?.split('\n')
+                    .find(l => l.trim().length > 40 && !l.startsWith('#') && !l.startsWith('-') && !l.startsWith('|'))
+                    ?.replace(/^\*+/, '').trim()
+                    || result.scorecard?.roi_estimate
+                    || ''}
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 text-right shrink-0">
+                <div>
+                  <p className="opacity-60 text-xs uppercase tracking-widest mb-0.5 font-sans">Confidence</p>
+                  <p className="font-mono font-bold text-2xl">{result.jtbd?.confidence ?? '—'}%</p>
+                </div>
+                <div>
+                  <p className="opacity-60 text-xs uppercase tracking-widest mb-0.5 font-sans">Evidence</p>
+                  <p className="font-mono text-sm">{result.jtbd?.evidence_level?.replace(/_/g, ' ') ?? '—'}</p>
+                </div>
+              </div>
+            </div>
+            {result.scorecard?.roi_estimate && (
+              <div className="mt-4 pt-4 border-t border-white/20">
+                <p className="text-xs opacity-75 font-sans leading-relaxed">{result.scorecard.roi_estimate}</p>
+              </div>
+            )}
+          </div>
+
           {/* Header & Metrics block */}
           <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-8 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
             <div className="flex items-start justify-between gap-6 flex-wrap mb-8">
@@ -248,23 +298,28 @@ export default function Report() {
                     href={api.exportPdfUrl(result.session_id)}
                     target="_blank"
                     rel="noopener noreferrer"
+                    aria-label="Pobierz raport PDF (otwiera w nowej karcie)"
+                    data-testid="export-pdf"
                     className="px-4 py-2 bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] shadow-sm rounded-lg text-sm font-sans font-medium text-[#0D2535] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2A2A2A] transition-colors flex items-center gap-2"
                   >
-                    <Download size={16} className="text-slate-400" />
+                    <Download size={16} className="text-slate-400" aria-hidden="true" />
                     PDF
                   </a>
                   <button
                     onClick={() => setMiroOpen(true)}
+                    data-testid="export-miro"
+                    aria-label="Eksportuj do Miro"
                     className="px-4 py-2 bg-[#14B8A6] shadow-sm rounded-lg text-sm font-sans font-semibold text-white hover:bg-[#0D9488] transition-colors flex items-center gap-2"
                   >
-                    <Share2 size={16} />
+                    <Share2 size={16} aria-hidden="true" />
                     Miro
                   </button>
                   {/* Slack */}
                   <button
                     onClick={handleSlackSend}
                     disabled={slackSending}
-                    title="Wyślij powiadomienie do Slacka"
+                    data-testid="export-slack"
+                    aria-label="Wyślij powiadomienie do Slacka"
                     className={`px-4 py-2 shadow-sm rounded-lg text-sm font-sans font-semibold transition-colors flex items-center gap-2 ${slackResult?.sent
                         ? 'bg-emerald-500 text-white'
                         : slackResult && !slackResult.sent
@@ -286,7 +341,8 @@ export default function Report() {
                   <button
                     onClick={handleGdocsExport}
                     disabled={gdocsSending}
-                    title="Eksportuj do Google Docs"
+                    data-testid="export-gdocs"
+                    aria-label="Eksportuj do Google Docs"
                     className={`px-4 py-2 shadow-sm rounded-lg text-sm font-sans font-semibold transition-colors flex items-center gap-2 ${gdocsResult
                         ? 'bg-blue-500 text-white'
                         : 'bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] text-[#0D2535] dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-[#2A2A2A]'
@@ -440,7 +496,7 @@ export default function Report() {
                 <h2 className="font-mono font-bold text-lg text-[#0D2535]">Assumption Map</h2>
               </div>
               <div className="p-8">
-                <AssumptionTable assumptionMap={result.assumption_map} />
+                <AssumptionTable assumptionMap={result.assumption_map} sessionId={result.session_id} />
               </div>
             </div>
           )}

@@ -54,17 +54,11 @@ async def update_session_status(
         if log_entry:
             logs.append(log_entry)
 
-        sets = ["status=?", "logs_json=?"]
-        vals = [status, json.dumps(logs)]
-        if progress is not None:
-            sets.append("progress=?")
-            vals.append(progress)
-        if current_node is not None:
-            sets.append("current_node=?")
-            vals.append(current_node)
-        vals.append(session_id)
-
-        await db.execute(f"UPDATE sessions SET {', '.join(sets)} WHERE id=?", vals)
+        await db.execute(
+            "UPDATE sessions SET status=?, logs_json=?, "
+            "progress=COALESCE(?, progress), current_node=COALESCE(?, current_node) WHERE id=?",
+            (status, json.dumps(logs), progress, current_node, session_id),
+        )
         await db.commit()
 
 
@@ -85,12 +79,20 @@ async def get_session(session_id: str) -> dict | None:
         return dict(row) if row else None
 
 
-async def list_sessions() -> list[dict]:
+async def count_sessions() -> int:
+    async with aiosqlite.connect(_db_path()) as db:
+        cursor = await db.execute("SELECT COUNT(*) FROM sessions")
+        row = await cursor.fetchone()
+        return row[0] if row else 0
+
+
+async def list_sessions(limit: int = 50, offset: int = 0) -> list[dict]:
     async with aiosqlite.connect(_db_path()) as db:
         db.row_factory = aiosqlite.Row
         cursor = await db.execute(
             "SELECT id, project_name, mode, status, progress, created_at, result_json "
-            "FROM sessions ORDER BY created_at DESC"
+            "FROM sessions ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (limit, offset),
         )
         rows = await cursor.fetchall()
         return [dict(r) for r in rows]

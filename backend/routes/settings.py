@@ -24,7 +24,7 @@ class SettingsResponse(BaseModel):
     serper_api_key_set: bool
     brave_api_key_set: bool
     miro_access_token_set: bool
-    miro_board_id: str
+    miro_board_id_set: bool
     slack_webhook_url_set: bool
     slack_auto_notify: bool
     llm_model: str
@@ -79,7 +79,7 @@ async def get_settings():
         serper_api_key_set=bool(cfg.get("serper_api_key")),
         brave_api_key_set=bool(cfg.get("brave_api_key")),
         miro_access_token_set=bool(cfg.get("miro_access_token")),
-        miro_board_id=cfg.get("miro_board_id", ""),
+        miro_board_id_set=bool(cfg.get("miro_board_id")),
         slack_webhook_url_set=bool(cfg.get("slack_webhook_url")),
         slack_auto_notify=bool(cfg.get("slack_auto_notify", False)),
         llm_model=cfg.get("llm_model", "claude-sonnet-4-6"),

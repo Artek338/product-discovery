@@ -10,14 +10,18 @@ Miro endpoint:
   dry_run=true → symulacja bez wywołań API (do testów bez konta Miro)
 """
 import json
+import logging
 import os
+import shutil
 import tempfile
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse, HTMLResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
+
+logger = logging.getLogger(__name__)
 
 from backend.config import get as cfg_get
 from backend.db import get_session
@@ -54,7 +58,7 @@ def _session_to_discovery_data(data: dict) -> dict:
 
 
 @router.get("/{session_id}/html")
-async def export_html(session_id: str):
+async def export_html(session_id: str, background_tasks: BackgroundTasks):
     session = await get_session(session_id)
     if not session or not session.get("result_json"):
         raise HTTPException(status_code=404, detail="Result not found")
@@ -67,6 +71,7 @@ async def export_html(session_id: str):
         from product_discovery.visualizations.report_html import generate_html_report
 
         tmp_dir = tempfile.mkdtemp()
+        background_tasks.add_task(shutil.rmtree, tmp_dir, True)  # sprząta po wysłaniu
         html_path = generate_html_report(
             project_name=project_name,
             discovery_data=discovery_data,
@@ -79,11 +84,12 @@ async def export_html(session_id: str):
             filename=f"discovery_{project_name}.html",
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"HTML generation failed: {e}")
+        logger.exception("HTML generation failed for session %s", session_id)
+        raise HTTPException(status_code=500, detail="Nie udało się wygenerować raportu HTML")
 
 
 @router.get("/{session_id}/pdf")
-async def export_pdf(session_id: str):
+async def export_pdf(session_id: str, background_tasks: BackgroundTasks):
     session = await get_session(session_id)
     if not session or not session.get("result_json"):
         raise HTTPException(status_code=404, detail="Result not found")
@@ -97,6 +103,7 @@ async def export_pdf(session_id: str):
         from product_discovery.visualizations.report_pdf import export_pdf as gen_pdf
 
         tmp_dir = tempfile.mkdtemp()
+        background_tasks.add_task(shutil.rmtree, tmp_dir, True)  # sprząta po wysłaniu
         html_path = generate_html_report(
             project_name=project_name,
             discovery_data=discovery_data,
@@ -111,7 +118,8 @@ async def export_pdf(session_id: str):
             filename=f"discovery_{project_name}.pdf",
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"PDF generation failed: {e}")
+        logger.exception("PDF generation failed for session %s", session_id)
+        raise HTTPException(status_code=500, detail="Nie udało się wygenerować PDF")
 
 
 # ── Miro export ───────────────────────────────────────────────────────────────
@@ -248,7 +256,7 @@ async def export_slack(session_id: str, req: SlackNotifyRequest):
 # ── Google Docs export ─────────────────────────────────────────────────────────
 
 class GDocsExportRequest(BaseModel):
-    share_with: list[str] = []    # Lista emaili do udostępnienia dokumentu
+    share_with: list[EmailStr] = []   # Lista emaili — walidacja formatu
     folder_id: Optional[str] = None  # Opcjonalny ID folderu Google Drive
 
 

@@ -102,12 +102,22 @@ async def _run_discovery_task(
         )
 
     try:
-        result = await run_discovery(
-            idea_description=idea,
-            project_name=project_name,
-            interview_notes=interview_notes or "",
-            progress_callback=progress_callback,
-        )
+        try:
+            result = await asyncio.wait_for(
+                run_discovery(
+                    idea_description=idea,
+                    project_name=project_name,
+                    interview_notes=interview_notes or "",
+                    progress_callback=progress_callback,
+                ),
+                timeout=1800,  # 30 minut hard cap
+            )
+        except asyncio.TimeoutError:
+            await update_session_status(
+                session_id, "failed",
+                log_entry="❌ Timeout: sesja przekroczyła 30 minut. Spróbuj ponownie z krótszym opisem."
+            )
+            return
 
         # Serializuj wynik do JSON
         result_data = {
@@ -186,8 +196,16 @@ async def run_discovery_endpoint(
     return DiscoveryRunResponse(session_id=session_id, status="queued")
 
 
+def _validate_session_id(session_id: str) -> None:
+    try:
+        uuid.UUID(session_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Nieprawidłowy identyfikator sesji")
+
+
 @router.get("/{session_id}/status", response_model=DiscoveryStatusResponse)
 async def get_status(session_id: str):
+    _validate_session_id(session_id)
     session = await get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -204,6 +222,7 @@ async def get_status(session_id: str):
 
 @router.get("/{session_id}/result", response_model=DiscoveryResultResponse)
 async def get_result(session_id: str):
+    _validate_session_id(session_id)
     session = await get_session(session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
