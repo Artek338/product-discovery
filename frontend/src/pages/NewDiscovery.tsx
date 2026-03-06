@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Rocket, X, AlertCircle, HelpCircle, Paperclip, Lightbulb, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react'
+import { Rocket, X, AlertCircle, HelpCircle, Paperclip, Lightbulb, ChevronDown, ChevronUp, RefreshCw, Plus, Layers } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAppStore } from '../store/appStore'
 import { t } from '../lib/i18n'
@@ -49,15 +49,8 @@ function IdeationPanel({ onApply }: { onApply: (text: string) => void }) {
   }
 
   const next = () => {
-    if (tab === 'scamper') setScamperIdx(i => (i + 1) % SCAMPER.length)
     if (tab === 'reverse') setReverseIdx(i => (i + 1) % REVERSE_BRAINSTORM.length)
     if (tab === 'analogies') setAnalogyIdx(i => (i + 1) % ANALOGIES.length)
-  }
-
-  const getPromptText = () => {
-    if (tab === 'scamper') return `[SCAMPER — ${current.scamper.label}]\n${current.scamper.question}\n\nMój pomysł:`
-    if (tab === 'reverse') return `[Reverse Brainstorm]\nOdwrócone pytanie: ${current.reverse}\n\nMój pomysł (odwróć tę perspektywę):`
-    return `[Analogia: ${current.analogies.domain}]\n${current.analogies.prompt}\n\nMój pomysł:`
   }
 
   const TABS: { id: IdeationTab; label: string }[] = [
@@ -66,77 +59,150 @@ function IdeationPanel({ onApply }: { onApply: (text: string) => void }) {
     { id: 'analogies', label: 'Analogie' },
   ]
 
+  const renderScamper = () => (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      {/* Wizualny selektor SCAMPER */}
+      <div className="flex flex-wrap gap-2 sm:gap-3">
+        {SCAMPER.map((item, idx) => {
+          const isActive = scamperIdx === idx;
+          return (
+            <button
+              key={item.letter}
+              onClick={() => setScamperIdx(idx)}
+              className={`flex flex-col items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl border-2 transition-all shadow-sm ${isActive
+                ? 'border-[#14B8A6] bg-[#F0FDFA] dark:bg-teal-900/30 text-[#0D9488] dark:text-teal-300 translate-y-[-2px]'
+                : 'border-[#E2E8F0] dark:border-[#333333] bg-white dark:bg-[#1A1A1A] text-slate-500 hover:border-[#CCFBF1] dark:hover:border-teal-900/50'
+                }`}
+            >
+              <span className="font-mono font-bold text-lg sm:text-xl leading-none">{item.letter}</span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Treść wybranego kroku */}
+      <div className="bg-[#F8FAFC] dark:bg-[#1A1A1A] rounded-xl p-5 border border-[#E2E8F0] dark:border-[#333333] shadow-inner">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#0D9488] dark:text-teal-400">
+            {current.scamper.label}
+          </span>
+        </div>
+        <p className="text-[#0D2535] dark:text-slate-300 leading-relaxed font-sans text-sm">
+          {current.scamper.question}
+        </p>
+      </div>
+
+      {/* Akcje - rozdzielenie na wstawienie jednego punktu i całego szablonu */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <button
+          type="button"
+          onClick={() => onApply(`[SCAMPER — ${current.scamper.label}]\n${current.scamper.question}\n\nMój pomysł:\n`)}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-white bg-[#14B8A6] hover:bg-[#0D9488] transition-all shadow-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <Plus size={16} /> Wstaw to pytanie
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            const allText = SCAMPER.map(s => `**[${s.letter}] ${s.label}:**\n${s.question}\n-> `).join('\n\n')
+            onApply(`--- SZABLON SCAMPER ---\n\n${allText}`)
+          }}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-[#0D9488] dark:text-teal-300 bg-[#F0FDFA] dark:bg-teal-900/30 hover:bg-[#CCFBF1] dark:hover:bg-teal-900/50 transition-all border border-[#CCFBF1] dark:border-teal-800 flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <Layers size={16} /> Wstaw całą strukturę (7)
+        </button>
+      </div>
+    </div>
+  )
+
+  const renderReverse = () => (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      <div className="bg-[#F8FAFC] dark:bg-[#1A1A1A] rounded-xl p-5 border border-[#E2E8F0] dark:border-[#333333] shadow-inner">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#0D9488] dark:text-teal-400">
+            Odwróć perspektywę
+          </span>
+        </div>
+        <p className="text-[#0D2535] dark:text-slate-300 leading-relaxed font-sans text-sm">
+          {current.reverse}
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <button
+          type="button"
+          onClick={next}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-[#0D9488] dark:text-teal-300 bg-[#F0FDFA] dark:bg-teal-900/30 hover:bg-[#CCFBF1] dark:hover:bg-teal-900/50 transition-all border border-[#CCFBF1] dark:border-teal-800 flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <RefreshCw size={16} /> Inne pytanie
+        </button>
+        <button
+          type="button"
+          onClick={() => onApply(`[Reverse Brainstorm]\nOdwrócone pytanie: ${current.reverse}\n\nMój pomysł (odwróć tę perspektywę):\n`)}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-white bg-[#14B8A6] hover:bg-[#0D9488] transition-all shadow-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <Plus size={16} /> Użyj w opisie
+        </button>
+      </div>
+    </div>
+  )
+
+  const renderAnalogies = () => (
+    <div className="space-y-5 animate-in fade-in duration-300">
+      <div className="bg-[#F8FAFC] dark:bg-[#1A1A1A] rounded-xl p-5 border border-[#E2E8F0] dark:border-[#333333] shadow-inner">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-sm font-bold uppercase tracking-wider text-[#0D9488] dark:text-teal-400">
+            Model biznesowy: {current.analogies.domain}
+          </span>
+        </div>
+        <p className="text-[#0D2535] dark:text-slate-300 leading-relaxed font-sans text-sm">
+          {current.analogies.prompt}
+        </p>
+      </div>
+
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <button
+          type="button"
+          onClick={next}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-[#0D9488] dark:text-teal-300 bg-[#F0FDFA] dark:bg-teal-900/30 hover:bg-[#CCFBF1] dark:hover:bg-teal-900/50 transition-all border border-[#CCFBF1] dark:border-teal-800 flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <RefreshCw size={16} /> Inny model
+        </button>
+        <button
+          type="button"
+          onClick={() => onApply(`[Analogie — wzorzec: ${current.analogies.domain}]\n${current.analogies.prompt}\n\nMój pomysł:\n`)}
+          className="flex-1 py-2.5 px-4 rounded-lg text-sm font-bold text-white bg-[#14B8A6] hover:bg-[#0D9488] transition-all shadow-sm flex items-center justify-center gap-2 focus:ring-2 focus:ring-[#14B8A6] focus:ring-offset-1 dark:focus:ring-offset-[#141414]"
+        >
+          <Plus size={16} /> Użyj jako punkt startowy
+        </button>
+      </div>
+    </div>
+  )
+
   return (
-    <div className="bg-[#0D2535] rounded-xl border border-[#1E3A5F] overflow-hidden">
+    <div className="bg-white dark:bg-[#111111] rounded-xl border border-[#E2E8F0] dark:border-[#333333] overflow-hidden shadow-sm mt-4">
       {/* Tab bar */}
-      <div className="flex border-b border-[#1E3A5F]">
+      <div className="flex overflow-x-auto hide-scrollbar border-b border-[#E2E8F0] dark:border-[#333333] bg-[#F8FAFC] dark:bg-[#1A1A1A]">
         {TABS.map(t => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors ${tab === t.id
-              ? 'text-[#14B8A6] border-b-2 border-[#14B8A6] -mb-px'
-              : 'text-[#4A7090] hover:text-white'
+            className={`flex-1 min-w-max px-6 py-3.5 text-xs font-bold uppercase tracking-wider transition-all border-b-2 ${tab === t.id
+              ? 'text-[#0D9488] dark:text-teal-400 border-[#14B8A6] bg-white dark:bg-[#111111]'
+              : 'text-slate-500 dark:text-slate-400 border-transparent hover:text-[#0D2535] dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#2A2A2A]'
               }`}
           >
             {t.label}
           </button>
         ))}
-        <div className="flex-1" />
-        <button
-          type="button"
-          onClick={next}
-          className="px-4 py-2.5 text-xs text-[#4A7090] hover:text-white flex items-center gap-1.5 transition-colors"
-          title="Następna podpowiedź"
-        >
-          <RefreshCw size={12} />
-          Następna
-        </button>
       </div>
 
       {/* Content */}
-      <div className="p-5 space-y-4">
-        {tab === 'scamper' && (
-          <div>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="w-8 h-8 rounded-lg bg-[#14B8A6] text-white font-bold text-sm flex items-center justify-center shrink-0">
-                {current.scamper.letter}
-              </span>
-              <span className="text-xs font-bold text-[#14B8A6] uppercase tracking-wider">{current.scamper.label}</span>
-              <span className="text-[10px] text-[#4A7090]">{scamperIdx + 1}/{SCAMPER.length}</span>
-            </div>
-            <p className="text-sm text-slate-300 leading-relaxed">{current.scamper.question}</p>
-          </div>
-        )}
-
-        {tab === 'reverse' && (
-          <div>
-            <p className="text-[10px] font-bold text-[#14B8A6] uppercase tracking-wider mb-3">
-              Odwróć problem — znajdź anty-wzorzec, potem zaprzecz
-            </p>
-            <p className="text-sm text-slate-300 leading-relaxed italic">&ldquo;{current.reverse}&rdquo;</p>
-            <p className="text-xs text-[#4A7090] mt-3">{reverseIdx + 1}/{REVERSE_BRAINSTORM.length} — odwróć tę perspektywę żeby odkryć co NAPRAWDĘ tworzy wartość</p>
-          </div>
-        )}
-
-        {tab === 'analogies' && (
-          <div>
-            <p className="text-[10px] font-bold text-[#14B8A6] uppercase tracking-wider mb-1">
-              Model: {current.analogies.domain}
-            </p>
-            <p className="text-sm text-slate-300 leading-relaxed mt-2">{current.analogies.prompt}</p>
-            <p className="text-[10px] text-[#4A7090] mt-3">{analogyIdx + 1}/{ANALOGIES.length}</p>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onApply(getPromptText())}
-          className="w-full py-2 rounded-lg text-xs font-bold text-[#0D2535] bg-[#14B8A6] hover:bg-[#0D9488] transition-colors mt-2"
-        >
-          Użyj jako szablon opisu →
-        </button>
+      <div className="p-6">
+        {tab === 'scamper' && renderScamper()}
+        {tab === 'reverse' && renderReverse()}
+        {tab === 'analogies' && renderAnalogies()}
       </div>
     </div>
   )
@@ -374,8 +440,8 @@ export default function NewDiscovery() {
                 aria-checked={mode === m.value}
                 onClick={() => setMode(m.value)}
                 className={`p-4 rounded-xl border-2 transition-all ${mode === m.value
-                    ? 'border-[#14B8A6] bg-[#F0FDFA] dark:bg-teal-900/20'
-                    : 'border-[#E2E8F0] dark:border-[#333333] hover:border-[#CCFBF1] dark:hover:border-[#14B8A6]/40 bg-white dark:bg-[#141414]'
+                  ? 'border-[#14B8A6] bg-[#F0FDFA] dark:bg-teal-900/20'
+                  : 'border-[#E2E8F0] dark:border-[#333333] hover:border-[#CCFBF1] dark:hover:border-[#14B8A6]/40 bg-white dark:bg-[#141414]'
                   }`}
               >
                 <div className="flex items-center gap-2 mb-2 relative group w-full">
