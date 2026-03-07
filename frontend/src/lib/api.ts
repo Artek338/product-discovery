@@ -2,6 +2,9 @@
 
 import type {
   AppSettings,
+  BatchRunRequest,
+  BatchSession,
+  BatchSessionSummary,
   DiscoveryResult,
   DiscoveryRunRequest,
   DiscoveryRunResponse,
@@ -91,6 +94,23 @@ export const api = {
     body: { share_with?: string[]; folder_id?: string },
   ): Promise<GDocsExportResponse> =>
     request(`/export/${sessionId}/gdocs`, { method: 'POST', body: JSON.stringify(body) }),
+
+  // ============ Batch Interview Runner ============
+
+  /**
+   * Uruchamia batch — zwraca SSE stream.
+   * Uwaga: użyj natywnego fetch z EventSource lub ReadableStream.
+   */
+  runBatchUrl: (): string => `${BASE}/batch/run`,
+
+  getBatchSessions: (): Promise<BatchSessionSummary[]> =>
+    request('/batch'),
+
+  getBatchSession: (id: string): Promise<BatchSession> =>
+    request(`/batch/${id}`),
+
+  deleteBatchSession: (id: string): Promise<{ status: string }> =>
+    request(`/batch/${id}`, { method: 'DELETE' }),
 
   // ============ Settings ============
 

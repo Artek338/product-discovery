@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, NavLink } from 'react-router-dom'
 import {
   LayoutDashboard, Plus, MessageSquare, Search, Bell, Moon, Sun,
-  Settings, LogOut, BookOpen, Users, Bot,
+  Settings, LogOut, BookOpen, Users, Bot, Layers,
 } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import NewDiscovery from './pages/NewDiscovery'
@@ -12,6 +12,7 @@ import SettingsPage from './pages/Settings'
 import Kompendium from './pages/Kompendium'
 import SyntheticInterviews from './pages/SyntheticInterviews'
 import Agents from './pages/Agents'
+import BatchInterview from './pages/BatchInterview'
 import { useAppStore } from './store/appStore'
 import { t } from './lib/i18n'
 
@@ -23,6 +24,7 @@ function Sidebar() {
     { to: '/', icon: LayoutDashboard, label: t(language, 'nav_dashboard'), end: true },
     { to: '/discovery/new', icon: Plus, label: t(language, 'nav_new'), end: false },
     { to: '/simulate', icon: MessageSquare, label: t(language, 'nav_simulator'), end: false },
+    { to: '/batch', icon: Layers, label: t(language, 'nav_batch'), end: false },
   ]
 
   const NAV_KNOWLEDGE = [
@@ -289,6 +291,7 @@ export default function App() {
           <Route path="/kompendium" element={<Kompendium />} />
           <Route path="/synthetic-interviews" element={<SyntheticInterviews />} />
           <Route path="/agents" element={<Agents />} />
+          <Route path="/batch" element={<BatchInterview />} />
         </Routes>
       </Layout>
     </BrowserRouter>

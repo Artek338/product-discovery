@@ -10,6 +10,7 @@ const T = {
   nav_simulator: { pl: 'Symulator', en: 'Simulator' },
   nav_settings: { pl: 'Ustawienia', en: 'Settings' },
   nav_logout: { pl: 'Wyloguj', en: 'Log out' },
+  nav_batch: { pl: 'Batch Wywiady', en: 'Batch Interviews' },
   search_ph: { pl: 'Szukaj...', en: 'Search...' },
 
   // ── Dashboard ────────────────────────────────────────────────────────────────
