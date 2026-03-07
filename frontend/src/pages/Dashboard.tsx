@@ -20,7 +20,10 @@ export default function Dashboard() {
   const [filterOption, setFilterOption] = useState<string>('all')
 
   useEffect(() => {
-    api.getProjects().then(page => setProjects(page.items)).catch(console.error)
+    api.getProjects().then((data: any) => {
+      const items = Array.isArray(data) ? data : (data.items ?? [])
+      setProjects(items)
+    }).catch(console.error)
   }, [setProjects])
 
   const STATUS_LABEL: Record<string, string> = {
