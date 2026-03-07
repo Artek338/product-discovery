@@ -94,6 +94,15 @@ _model = AnthropicModel(
     )
 )
 
+# Tańszy model do symulacji wywiadów — roleplay nie wymaga głębokiego rozumowania.
+# ~10× tańszy od Sonnet, jakość odpowiedzi syntetycznych porównywalna.
+_haiku_model = AnthropicModel(
+    "claude-haiku-4-5-20251001",
+    provider=AnthropicProvider(
+        api_key=os.getenv("ANTHROPIC_API_KEY", "placeholder-for-import-check")
+    )
+)
+
 
 # ============================================================================
 # Synthetic User Generator Agent
@@ -126,10 +135,10 @@ Twoim zadaniem jest odpowiadanie na pytania interviewera JAKO konkretny syntetyc
 """
 
 synthetic_interview_agent = Agent(
-    _model,
+    _haiku_model,  # haiku wystarczy do roleplay — 10× tańszy niż sonnet
     output_type=SyntheticUserResponse,
     system_prompt=_SIMULATOR_PROMPT,
-    model_settings={"temperature": 0.7},
+    model_settings={"temperature": 0.7, "max_tokens": 500},
 )
 
 
@@ -336,16 +345,11 @@ async def generate_archetypes_stream(
         msg = "Generuje archetyp " + str(i) + "/" + str(count) + ": " + hint + "..."
         yield {"type": "progress", "step": i, "total": count, "message": msg}
 
-        context_extra = ("
-Dodatkowy kontekst: " + additional_context) if additional_context else ""
+        context_extra = ("\nDodatkowy kontekst: " + additional_context) if additional_context else ""
         prompt = (
-            "Segment produktu: " + product_segment + context_extra + "
-"
-            "Typ rynku: " + market_type + "
-"
-            "Archetyp #" + str(i) + "/" + str(count) + " - Perspektywa: " + hint + "
-
-"
+            "Segment produktu: " + product_segment + context_extra + "\n"
+            "Typ rynku: " + market_type + "\n"
+            "Archetyp #" + str(i) + "/" + str(count) + " - Perspektywa: " + hint + "\n\n"
             "Stworz unikalny archetyp reprezentujacy TA KONKRETNA perspektywe: " + hint
         )
 
@@ -390,14 +394,9 @@ async def generate_follow_up_question(
         return follow_up_suggested
 
     prompt = (
-        "Profil: " + archetype.archetype_name + " - " + archetype.demographics + "
-
-"
-        "Oryginalne pytanie: " + original_question + "
-"
-        "Odpowiedz (slaba jakosc): " + weak_response_text + "
-
-"
+        "Profil: " + archetype.archetype_name + " - " + archetype.demographics + "\n\n"
+        "Oryginalne pytanie: " + original_question + "\n"
+        "Odpowiedz (slaba jakosc): " + weak_response_text + "\n\n"
         "Wygeneruj jedno konkretne pytanie follow-up ktore wyciagnie glebsza, bardziej autentyczna odpowiedz. "
         "Pytanie powinno byc oparte na konkretnym zachowaniu z przeszlosci (Evidence Level 2+). "
         "Zwroc TYLKO tekst pytania, bez wyjasnien."

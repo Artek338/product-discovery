@@ -60,7 +60,7 @@ Analiza musi być KONKRETNA, PSYCHOLOGICZNIE UZASADNIONA, ACTIONABLE, UCZCIWA.
 # ============================================================================
 
 _model = AnthropicModel(
-    "claude-sonnet-4-6",
+    "claude-haiku-4-5-20251001",  # haiku wystarczy do analizy strukturalnej pytań
     provider=AnthropicProvider(
         api_key=os.getenv("ANTHROPIC_API_KEY", "placeholder-for-import-check")
     )
@@ -70,7 +70,7 @@ interview_coach_agent = Agent(
     _model,
     output_type=InterviewImprovementReport,
     system_prompt=_SYSTEM_PROMPT,
-    model_settings={"temperature": 0.3},
+    model_settings={"temperature": 0.3, "max_tokens": 2000},
     output_retries=2,
 )
 

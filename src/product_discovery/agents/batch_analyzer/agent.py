@@ -204,7 +204,7 @@ batch_analysis_agent = Agent(
     model=_model,
     output_type=BatchInsightsSchema,
     system_prompt=_BATCH_ANALYSIS_PROMPT,
-    model_settings={"temperature": 0.2},
+    model_settings={"temperature": 0.2, "max_tokens": 8000},  # duża analiza wymaga miejsca
     output_retries=2,
 )
 
