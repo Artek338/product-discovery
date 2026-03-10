@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Bot, Eye, Cpu, Power, PowerOff, X, AlertCircle, RefreshCw } from 'lucide-react'
+import PageGuideBanner from '../components/PageGuideBanner'
 
 const STORAGE_KEY = 'agent_config'
 
@@ -281,6 +282,62 @@ export default function Agents() {
                     z backendu — widzisz to co faktycznie działa pod spodem.
                 </p>
             </div>
+
+            <PageGuideBanner
+                storageKey="pd_guide_agents"
+                badge="Jak to działa?"
+                title="Agenty Discovery — przewodnik"
+                sections={[
+                    {
+                        title: '🤖 Co to jest?',
+                        content: (
+                            <>
+                                <p><strong>8 wyspecjalizowanych agentów AI</strong> tworzących pipeline Discovery.</p>
+                                <p className="mt-1.5">Każdy wykonuje jedną konkretną rolę — razem dostarczają pełną analizę z rekomendacją GO / NO-GO.</p>
+                            </>
+                        ),
+                    },
+                    {
+                        title: '⚡ Pipeline (8 kroków)',
+                        content: (
+                            <ol className="space-y-1">
+                                {[
+                                    'Syntetyczne wywiady',
+                                    'Wywiady behawioralne (JTBD)',
+                                    'Research konkurencji (OSINT)',
+                                    'Ocena dowodów (0–5)',
+                                    'Diagram sił rynkowych',
+                                    'Synteza JTBD',
+                                    'Mapa założeń',
+                                    'Scorecard + GO/NO-GO',
+                                ].map((s, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-xs">
+                                        <span className="shrink-0 w-4 h-4 rounded-full bg-[#14B8A6]/20 text-[#14B8A6] text-[10px] flex items-center justify-center font-bold mt-0.5">{i + 1}</span>
+                                        {s}
+                                    </li>
+                                ))}
+                            </ol>
+                        ),
+                    },
+                    {
+                        title: '💡 Wskazówki',
+                        content: (
+                            <div className="space-y-1.5">
+                                {[
+                                    { label: 'System Prompt', desc: 'Kliknij "SYSTEM PROMPT" przy agencie — zobaczysz co faktycznie robi.' },
+                                    { label: 'Włącz / Wyłącz', desc: 'Ikona ⚡ dezaktywuje agenta — przydatne przy testach.' },
+                                    { label: 'Pliki AGENT.md', desc: 'Prompty ładowane na żywo — edytuj plik i odśwież stronę.' },
+                                ].map(({ label, desc }) => (
+                                    <div key={label}>
+                                        <span className="text-xs font-semibold text-[#14B8A6]">{label}:</span>{' '}
+                                        <span className="text-xs">{desc}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ),
+                    },
+                ]}
+            />
 
             {/* Loading */}
             {loading && (

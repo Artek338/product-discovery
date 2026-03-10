@@ -155,6 +155,8 @@ const T = {
   set_configured: { pl: 'skonfigurowany', en: 'configured' },
   set_not_configured: { pl: 'nieskonfigurowany', en: 'not configured' },
   set_loading: { pl: 'Ładowanie ustawień...', en: 'Loading settings...' },
+  set_key_keep: { pl: '(pozostaw puste żeby zachować)', en: '(leave empty to keep current)' },
+  set_already_set: { pl: '(skonfigurowany — wpisz nowy żeby zmienić)', en: '(configured — type to replace)' },
 
   // ── Usage & Costs ────────────────────────────────────────────────────────────
   usage_title: { pl: 'Zużycie i koszty', en: 'Usage & Costs' },
@@ -163,6 +165,63 @@ const T = {
   usage_cost: { pl: 'Estymowany koszt', en: 'Estimated cost' },
   usage_limit: { pl: 'Limit budżetu', en: 'Budget limit' },
   usage_cycle: { pl: 'Cykl rozliczeniowy: Marzec 2026', en: 'Billing cycle: March 2026' },
+
+  // ── Onboarding Banner ────────────────────────────────────────────────────────
+  onboard_badge: { pl: 'Nowy?', en: 'New here?' },
+  onboard_title: { pl: 'Przewodnik po aplikacji', en: 'App Guide' },
+  onboard_hide: { pl: 'Ukryj na zawsze', en: 'Dismiss permanently' },
+  onboard_show: { pl: 'Pokaż przewodnik', en: 'Show guide' },
+
+  onboard_what_title: { pl: '📌 Co to jest?', en: '📌 What is this?' },
+  onboard_what_desc: {
+    pl: 'Product Discovery to narzędzie dla Product Managerów, które pomaga odpowiedzieć na pytanie: „Czy warto budować ten produkt?" — zanim wpiszesz choć jeden wiersz kodu. Analizuje Twój pomysł z pomocą AI, przeprowadza syntetyczne wywiady z użytkownikami i dostarcza raport z rekomendacją GO / NO-GO.',
+    en: 'Product Discovery helps Product Managers answer: "Should we build this?" — before writing a single line of code. It analyzes your idea with AI, runs synthetic user interviews, and delivers a report with a GO / NO-GO recommendation.',
+  },
+
+  onboard_how_title: { pl: '🚀 Jak zacząć?', en: '🚀 How to start?' },
+  onboard_step1: {
+    pl: 'Przejdź do Ustawień i wklej klucz API Anthropic (wymagany)',
+    en: 'Go to Settings and paste your Anthropic API key (required)',
+  },
+  onboard_step2: {
+    pl: 'Kliknij „Nowy projekt" i opisz swój pomysł na produkt',
+    en: 'Click "New Project" and describe your product idea',
+  },
+  onboard_step3: {
+    pl: 'Wybierz tryb, kliknij „Uruchom Discovery" i poczekaj ~3–5 minut',
+    en: 'Choose a mode, click "Launch Discovery" and wait ~3–5 minutes',
+  },
+
+  onboard_modes_title: { pl: '🎯 Trzy tryby discovery', en: '🎯 Three discovery modes' },
+  onboard_mode_auto: {
+    pl: 'Auto — pełna analiza (polecany na start)',
+    en: 'Auto — full analysis (recommended for starters)',
+  },
+  onboard_mode_problem: {
+    pl: 'Problem — czy ten ból naprawdę istnieje?',
+    en: 'Problem — does this pain point really exist?',
+  },
+  onboard_mode_solution: {
+    pl: 'Rozwiązanie — co i jak zbudować, gdy problem jest potwierdzony',
+    en: 'Solution — what and how to build, once the problem is confirmed',
+  },
+
+  onboard_concepts_title: { pl: '💡 Kluczowe pojęcia', en: '💡 Key concepts' },
+  onboard_jtbd_label: { pl: 'JTBD (Jobs-to-be-Done)', en: 'JTBD (Jobs-to-be-Done)' },
+  onboard_jtbd_desc: {
+    pl: 'Ludzie nie kupują produktów — „wynajmują" je do wykonania konkretnej pracy. Odkrycie tej pracy to serce całej analizy.',
+    en: 'People don\'t buy products — they "hire" them to get a job done. Discovering that job is the core of the analysis.',
+  },
+  onboard_evidence_label: { pl: 'Poziomy dowodów (0–5)', en: 'Evidence levels (0–5)' },
+  onboard_evidence_desc: {
+    pl: 'Opinia to poziom 0. Faktyczna transakcja to poziom 5. Im wyższy poziom dowodów, tym większa pewność decyzji GO.',
+    en: 'Opinion is level 0. A real transaction is level 5. Higher evidence level = more confidence in the GO decision.',
+  },
+  onboard_sim_label: { pl: 'Symulator wywiadów', en: 'Interview Simulator' },
+  onboard_sim_desc: {
+    pl: 'Ćwicz pytania behawioralne na syntetycznych personach zanim porozmawiasz z prawdziwymi użytkownikami. Dostępny w menu po lewej.',
+    en: 'Practice behavioral interview questions with synthetic personas before talking to real users. Available in the left menu.',
+  },
 } satisfies Record<string, { pl: string; en: string }>
 
 export type LangKey = keyof typeof T

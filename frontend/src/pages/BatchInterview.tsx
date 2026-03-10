@@ -24,6 +24,7 @@ import {
 } from '../lib/questionBank'
 import BatchMatrix from '../components/BatchMatrix'
 import BatchInsightPanel from '../components/BatchInsightPanel'
+import PageGuideBanner from '../components/PageGuideBanner'
 import type {
   BatchCell,
   BatchInsights,
@@ -1177,6 +1178,60 @@ export default function BatchInterview() {
           Reset
         </button>
       </div>
+
+      <PageGuideBanner
+        storageKey="pd_guide_batch"
+        badge="Jak to działa?"
+        title="Batch Interview Runner — przewodnik"
+        sections={[
+          {
+            title: '🎯 Co to jest?',
+            content: (
+              <>
+                <p>Masowe wywiady syntetyczne: testuj <strong>N pytań × M archetypów</strong> jednocześnie.</p>
+                <p className="mt-1.5">Każda komórka macierzy = odpowiedź jednego archetypu na jedno pytanie z poziomem dowodów 0–5.</p>
+              </>
+            ),
+          },
+          {
+            title: '🚀 Jak używać?',
+            content: (
+              <ol className="space-y-1.5">
+                {[
+                  'Wybierz pytania z szablonów lub dodaj własne',
+                  'Skonfiguruj archetypy (segmenty użytkowników)',
+                  'Podaj kontekst produktu i uruchom sesję',
+                  'Analizuj macierz odpowiedzi i wglądy AI',
+                ].map((s, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="shrink-0 w-4 h-4 rounded-full bg-[#14B8A6] text-white text-[10px] flex items-center justify-center font-semibold mt-0.5">{i + 1}</span>
+                    {s}
+                  </li>
+                ))}
+              </ol>
+            ),
+          },
+          {
+            title: '💡 Tryby analizy',
+            content: (
+              <div className="space-y-1.5">
+                {[
+                  { label: 'Discovery', desc: 'Pełna analiza JTBD + siły rynkowe' },
+                  { label: 'Forces', desc: 'Push / Pull / Anxiety / Habit' },
+                  { label: 'WTP', desc: 'Gotowość do płacenia — Van Westendorp' },
+                  { label: 'Story', desc: 'Narracja — historia i kontekst problemu' },
+                  { label: 'Hypothesis', desc: 'Weryfikacja konkretnych hipotez' },
+                ].map(({ label, desc }) => (
+                  <div key={label}>
+                    <span className="text-xs font-semibold text-[#14B8A6]">{label}:</span>{' '}
+                    <span className="text-xs">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+      />
 
       <StepIndicator current={batchStep} />
 

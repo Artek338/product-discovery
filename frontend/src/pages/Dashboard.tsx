@@ -4,6 +4,7 @@ import { Plus, MoreHorizontal, Filter, Download, Search } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAppStore } from '../store/appStore'
 import { t } from '../lib/i18n'
+import OnboardingBanner from '../components/OnboardingBanner'
 
 const STATUS_BADGE: Record<string, string> = {
   queued: 'text-[#F59E0B] bg-[#FEF3C7]',
@@ -104,6 +105,9 @@ export default function Dashboard() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto overflow-hidden">
+      {/* Onboarding Banner */}
+      <OnboardingBanner />
+
       {/* Top Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Discovery overview */}

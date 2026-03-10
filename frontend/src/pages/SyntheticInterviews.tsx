@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Users, Save, RotateCcw, Check } from 'lucide-react'
 import { useAppStore } from '../store/appStore'
+import PageGuideBanner from '../components/PageGuideBanner'
 
 const STORAGE_KEY = 'synthetic_interview_config'
 
@@ -65,6 +66,7 @@ interface ScopeCategoryDef {
   id: string
   label: string
   icon: string
+  hint: string
   options: ScopeOption[]
 }
 
@@ -73,6 +75,7 @@ const SCOPE_CATEGORIES: ScopeCategoryDef[] = [
     id: 'age',
     label: 'Przedział wiekowy',
     icon: '📅',
+    hint: 'Wpływa na kontekst życiowy, przyzwyczajenia technologiczne i budżet. Zostaw puste jeśli produkt jest dla wszystkich grup wiekowych.',
     options: [
       { value: '18_24', label: '18–24 lata' },
       { value: '25_34', label: '25–34 lata' },
@@ -85,11 +88,12 @@ const SCOPE_CATEGORIES: ScopeCategoryDef[] = [
     id: 'org',
     label: 'Kontekst organizacyjny',
     icon: '🏢',
+    hint: 'Determinuje złożoność procesu zakupowego — freelancer decyduje sam w 5 min, duże firmy mają dział zakupów i nawet 6-miesięczny cykl decyzyjny.',
     options: [
-      { value: 'freelancer', label: 'Solopreneur / Freelancer' },
+      { value: 'freelancer', label: 'Freelancer / samozatrudniony' },
       { value: 'startup', label: 'Startup (≤50 os.)' },
-      { value: 'scaleup', label: 'Scale-up (50–500 os.)' },
-      { value: 'enterprise', label: 'Enterprise (500+ os.)' },
+      { value: 'scaleup', label: 'Firma rozwijająca się (50–500 os.)' },
+      { value: 'enterprise', label: 'Duże przedsiębiorstwo (500+ os.)' },
       { value: 'public', label: 'Sektor publiczny / NGO' },
     ],
   },
@@ -97,19 +101,21 @@ const SCOPE_CATEGORIES: ScopeCategoryDef[] = [
     id: 'role',
     label: 'Rola decyzyjna',
     icon: '🎯',
+    hint: 'Kluczowe przy B2B. Decydent kupuje ale nie używa; użytkownik końcowy używa ale nie kupuje; blokujący może zablokować wdrożenie mimo podjętej decyzji zakupowej.',
     options: [
       { value: 'end_user', label: 'Użytkownik końcowy' },
-      { value: 'champion', label: 'Champion / Power User' },
-      { value: 'decision_maker', label: 'Decision Maker (zakup)' },
-      { value: 'blocker', label: 'Blocker (blokuje wdrożenie)' },
+      { value: 'champion', label: 'Ambasador / zaawansowany użytkownik' },
+      { value: 'decision_maker', label: 'Decydent (zakup)' },
+      { value: 'blocker', label: 'Blokujący (blokuje wdrożenie)' },
     ],
   },
   {
     id: 'adoption',
     label: 'Nastawienie do zmiany',
     icon: '🔄',
+    hint: 'Definiuje stosunek do ryzyka i nowych narzędzi. Innowator kupi chętnie i bez dowodów; maruder zmieni się tylko pod silną presją bólu.',
     options: [
-      { value: 'innovator', label: 'Innowator (early adopter)' },
+      { value: 'innovator', label: 'Innowator (pierwsza fala)' },
       { value: 'early_majority', label: 'Wczesna większość (pragmatycy)' },
       { value: 'late_majority', label: 'Późna większość (ostrożni)' },
       { value: 'laggard', label: 'Sceptyk / Maruder' },
@@ -119,12 +125,13 @@ const SCOPE_CATEGORIES: ScopeCategoryDef[] = [
     id: 'motivation',
     label: 'Motywacja zakupowa',
     icon: '💡',
+    hint: 'Główne uzasadnienie zakupu. Rozmowa o redukcji kosztów wygląda zupełnie inaczej niż o wizerunku marki — AI dopasuje retorykę archetypu.',
     options: [
       { value: 'cost', label: 'Redukcja kosztów' },
       { value: 'revenue', label: 'Wzrost przychodów' },
       { value: 'time', label: 'Oszczędność czasu' },
-      { value: 'compliance', label: 'Wymogi / compliance' },
-      { value: 'prestige', label: 'Prestiż / brand image' },
+      { value: 'compliance', label: 'Wymogi prawne / regulacje' },
+      { value: 'prestige', label: 'Prestiż / wizerunek marki' },
     ],
   },
 ]
@@ -178,6 +185,85 @@ export default function SyntheticInterviews() {
         </p>
       </div>
 
+      <PageGuideBanner
+        storageKey="pd_guide_synthetic"
+        badge="Instrukcja obsługi"
+        title="Syntetyczne wywiady — jak to skonfigurować?"
+        sections={[
+          {
+            title: '🎯 Trzy typowe scenariusze',
+            content: (
+              <div className="space-y-3">
+                <div className="p-2.5 rounded-lg bg-teal-50/60 dark:bg-teal-900/10 border border-[#14B8A6]/20">
+                  <p className="text-xs font-semibold text-[#0D9488] mb-1">Eksploruję nowy rynek, nie wiem kto jest moim klientem</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Segment: <strong>Wielosegmentowy</strong> · Archetypy: <strong>4–5</strong> · Zakres: <strong>zostaw puste</strong> · Ton: <strong>Neutralny</strong></p>
+                  <p className="text-xs text-slate-400 mt-1">AI sam dobierze przekrój osobowości. Dowiesz się kto w ogóle może być użytkownikiem.</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-teal-50/60 dark:bg-teal-900/10 border border-[#14B8A6]/20">
+                  <p className="text-xs font-semibold text-[#0D9488] mb-1">Znam segment, chcę zwalidować konkretny problem lub decyzję zakupową</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Segment: <strong>B2B / SaaS</strong> · Archetypy: <strong>4–5</strong> · Zakres: <strong>wypełnij rolę i kontekst org.</strong> · Ton: <strong>Sceptyczny</strong></p>
+                  <p className="text-xs text-slate-400 mt-1">Sceptyczny ton wyciągnie prawdziwe obiekcje i bariery — bezcenne przed rozmowami z klientami.</p>
+                </div>
+                <div className="p-2.5 rounded-lg bg-teal-50/60 dark:bg-teal-900/10 border border-[#14B8A6]/20">
+                  <p className="text-xs font-semibold text-[#0D9488] mb-1">Testuję UI / weryfikuję feature z różnymi typami użytkowników</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">Segment: <strong>Wielosegmentowy</strong> · Archetypy: <strong>3</strong> · Zakres: <strong>puste lub tylko nastawienie</strong> · Ton: <strong>Neutralny</strong></p>
+                  <p className="text-xs text-slate-400 mt-1">Szeroki zakres + mało filtrów = przekrój od zaawansowanego użytkownika po marudera.</p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            title: '⚙️ Mentalna mapa ustawień',
+            content: (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-[#14B8A6] mb-1">Liczba archetypów = szerokość przekroju</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">System ma 8 wbudowanych "osi różnorodności" (wczesny adopter, pragmatyk, sceptyk, maruder…). Wybierasz ile z nich chcesz zbadać. <strong>8 = pełne spektrum</strong>, 3 = tylko pierwsze 3 osie.</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#14B8A6] mb-1">Zakres profilu = KTO z tej grupy</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400"><strong>Puste</strong> → AI decyduje samodzielnie → szeroki, bardziej losowy przekrój.<br /><strong>Wypełnione</strong> → zawężasz grupę, ale różnorodność zachowań zostaje zachowana wewnątrz niej. Np. "freelancer 25–34" da ci: wczesnego adoptera-freelancera, sceptyka-freelancera, pragmatyka-freelancera itd.</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-[#14B8A6] mb-1">Segment rynku = logika zachowań zakupowych</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">To ważniejsza decyzja niż zakres profilu. B2B vs. B2C generuje zupełnie inną psychologię archetypów (decydent ≠ użytkownik, ambasador vs. blokujący, zwrot z inwestycji vs. emocja).</p>
+                </div>
+              </div>
+            ),
+          },
+          {
+            title: '⚠️ Częste błędy',
+            content: (
+              <div className="space-y-2.5">
+                {[
+                  {
+                    bad: 'Entuzjastyczny ton przy discovery',
+                    why: 'Archetypy potwierdzają każdy pomysł. Wyniki wyglądają świetnie, ale są bezużyteczne — nie dowiesz się co blokuje zakup.',
+                  },
+                  {
+                    bad: 'Za dużo filtrów zakresu jednocześnie',
+                    why: 'Np. "18–24 lat + Duże przedsiębiorstwo + Decydent" jest niespójne. AI zacznie dryfować. Zostaw 1–2 filtry lub żaden.',
+                  },
+                  {
+                    bad: '1–2 archetypy to za mało',
+                    why: 'Nie zobaczysz wzorców. Minimum 3, żeby zobaczyć gdzie opinie się schodzą, a gdzie rozbiegają.',
+                  },
+                  {
+                    bad: 'Zmiana konfiguracji w trakcie projektu',
+                    why: 'Ta konfiguracja jest globalna — zmiana wpłynie na wszystkie nowe sesje Discovery. Ustaw raz przed startem projektu.',
+                  },
+                ].map(({ bad, why }) => (
+                  <div key={bad} className="text-xs">
+                    <p className="font-semibold text-slate-600 dark:text-slate-300">✗ {bad}</p>
+                    <p className="text-slate-400 mt-0.5">{why}</p>
+                  </div>
+                ))}
+              </div>
+            ),
+          },
+        ]}
+      />
+
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-8 shadow-sm border border-[#E2E8F0] dark:border-[#333333] space-y-8 transition-colors">
 
         {/* Liczba archetypów */}
@@ -185,8 +271,13 @@ export default function SyntheticInterviews() {
           <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-1">
             Liczba archetypów
           </label>
+          <p className="text-xs text-slate-400 font-sans mb-1">
+            System ma 8 wbudowanych osi różnorodności zachowań (early adopter → pragmatyk → sceptyk → laggard…). Wybierasz ile z nich zbadać.
+          </p>
           <p className="text-xs text-slate-400 font-sans mb-4">
-            Im więcej archetypów, tym bogatsze perspektywy — ale też dłuższy czas analizy.
+            <span className="text-slate-500 dark:text-slate-300 font-medium">3</span> = podstawowy przekrój (entuzjasta, pragmatyk, sceptyk) &nbsp;·&nbsp;
+            <span className="text-slate-500 dark:text-slate-300 font-medium">5</span> = zalecane (+ maruder, impulsywny nabywca) &nbsp;·&nbsp;
+            <span className="text-slate-500 dark:text-slate-300 font-medium">8</span> = pełne spektrum, wszystkie osie
           </p>
           <div className="flex items-center gap-4">
             <input
@@ -210,9 +301,12 @@ export default function SyntheticInterviews() {
 
         {/* Segment rynku */}
         <div>
-          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-3">
+          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-1">
             Segment rynku
           </label>
+          <p className="text-xs text-slate-400 font-sans mb-3">
+            <strong className="text-slate-500 dark:text-slate-300">Najważniejsza decyzja w tej konfiguracji.</strong> Determinuje logikę zakupową i psychologię archetypów — B2B generuje decydentów, ambasadorów i blokujących; B2C generuje pragmatyków, impulsywnych nabywców i zaawansowanych użytkowników. Jeśli nie jesteś pewny — wybierz <strong className="text-slate-500 dark:text-slate-300">Mixed</strong>.
+          </p>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {SEGMENTS.map(s => (
               <button
@@ -234,26 +328,31 @@ export default function SyntheticInterviews() {
 
         {/* Ton wywiadów */}
         <div>
-          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-3">
+          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-1">
             Ton wywiadów
           </label>
+          <p className="text-xs text-slate-400 font-sans mb-3">
+            Determinuje jak archetyp reaguje na pytania. <strong className="text-slate-500 dark:text-slate-300">Do discovery zawsze używaj Sceptycznego</strong> — tylko sceptyczny archetyp ujawni prawdziwe obiekcje i bariery zakupowe zamiast potwierdzać każdy pomysł.
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {TONES.map(tone => (
               <button
                 key={tone.value}
                 type="button"
-                title={tone.desc}
                 onClick={() => update('tone', tone.value)}
-                className={`flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all ${
+                className={`flex flex-col items-start gap-1 py-3 px-3 rounded-xl border-2 transition-all text-left ${
                   config.tone === tone.value
                     ? 'border-[#14B8A6] bg-[#F0FDFA] dark:bg-teal-900/20'
                     : 'border-[#E2E8F0] dark:border-[#333333] hover:border-[#14B8A6]/40 bg-white dark:bg-[#141414]'
                 }`}
               >
-                <span className="text-xl">{tone.emoji}</span>
-                <span className="font-sans font-semibold text-sm text-[#0D2535] dark:text-slate-200">
-                  {tone.label}
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-lg">{tone.emoji}</span>
+                  <span className="font-sans font-semibold text-sm text-[#0D2535] dark:text-slate-200">
+                    {tone.label}
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 leading-tight">{tone.desc}</span>
               </button>
             ))}
           </div>
@@ -261,9 +360,12 @@ export default function SyntheticInterviews() {
 
         {/* Język wywiadów */}
         <div>
-          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-3">
+          <label className="block font-sans text-sm font-semibold text-[#0D2535] dark:text-slate-200 mb-1">
             Język wywiadów
           </label>
+          <p className="text-xs text-slate-400 font-sans mb-3">
+            W jakim języku AI prowadzi wywiad. <strong className="text-slate-500 dark:text-slate-300">Auto</strong> wykrywa język z opisu segmentu — przydatne jeśli budujesz produkt globalny lub testujesz różne rynki. Pamiętaj: angielski często generuje bardziej "korporacyjne" odpowiedzi niż polski.
+          </p>
           <div className="grid grid-cols-3 gap-2">
             {LANG_OPTIONS.map(l => (
               <button
@@ -296,8 +398,11 @@ export default function SyntheticInterviews() {
               </span>
             )}
           </div>
+          <p className="text-xs text-slate-400 font-sans mb-1">
+            Zaznacz atrybuty, które AI ma uwzględnić przy generowaniu archetypów. <strong className="text-slate-500 dark:text-slate-300">Puste = AI decyduje samodzielnie</strong> — daje szerszy, bardziej losowy przekrój.
+          </p>
           <p className="text-xs text-slate-400 font-sans mb-5">
-            Zaznacz atrybuty, które AI ma uwzględnić przy generowaniu archetypów. Puste = AI decyduje samodzielnie.
+            Zaznaczenie filtrów zawęża grupę, ale zachowuje różnorodność zachowań wewnątrz niej (np. "freelancer" da ci: sceptycznego freelancera, entuzjastycznego freelancera itd.). Unikaj łączenia zbyt wielu filtrów naraz — np. "18–24 + Duże przedsiębiorstwo + Decydent" jest niespójne i AI zacznie dryfować.
           </p>
 
           <div className="space-y-5">
@@ -305,15 +410,18 @@ export default function SyntheticInterviews() {
               const selected = config.profileScope[cat.id] ?? []
               return (
                 <div key={cat.id}>
-                  <p className="text-xs font-semibold font-sans text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                    <span>{cat.icon}</span>
-                    <span>{cat.label}</span>
-                    {selected.length > 0 && (
-                      <span className="font-normal normal-case tracking-normal text-[#14B8A6]">
-                        ({selected.length})
-                      </span>
-                    )}
-                  </p>
+                  <div className="mb-2">
+                    <p className="text-xs font-semibold font-sans text-slate-500 dark:text-slate-400 uppercase tracking-wide flex items-center gap-1.5">
+                      <span>{cat.icon}</span>
+                      <span>{cat.label}</span>
+                      {selected.length > 0 && (
+                        <span className="font-normal normal-case tracking-normal text-[#14B8A6]">
+                          ({selected.length})
+                        </span>
+                      )}
+                    </p>
+                    <p className="text-[11px] text-slate-400 dark:text-slate-500 font-sans mt-0.5">{cat.hint}</p>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     {cat.options.map(opt => {
                       const isChecked = selected.includes(opt.value)
@@ -352,7 +460,7 @@ export default function SyntheticInterviews() {
             Dodatkowy kontekst <span className="font-normal text-slate-400">(opcjonalnie)</span>
           </label>
           <p className="text-xs text-slate-400 font-sans mb-2">
-            Szczegóły spoza powyższych kategorii — branża, region, specyficzne zachowania zakupowe.
+            Wszystko co wpiszesz tutaj trafia do każdego wywołania AI jako dodatkowy kontekst. Przydatne do: niszowej branży, konkretnego regionu geograficznego, specyficznego problemu. <strong className="text-slate-500 dark:text-slate-300">Nie powtarzaj tego co zaznaczyłeś w scope powyżej.</strong>
           </p>
           <textarea
             id="demography"
@@ -370,7 +478,7 @@ export default function SyntheticInterviews() {
             Pytania własne do wywiadów <span className="font-normal text-slate-400">(opcjonalnie)</span>
           </label>
           <p className="text-xs text-slate-400 font-sans mb-2">
-            AI doda te pytania do zestawu wywiadowego. Jedno pytanie na linię.
+            AI doda te pytania do zestawu wywiadowego dla każdego archetypu. Jedno pytanie na linię. <strong className="text-slate-500 dark:text-slate-300">Najlepiej działają pytania o przeszłe zachowania</strong>, nie o preferencje — np. <em>"Kiedy ostatnio zrezygnowałeś z narzędzia? Co się stało?"</em> zamiast <em>"Czy wolisz prostsze narzędzia?"</em>
           </p>
           <textarea
             id="questions"
