@@ -31,8 +31,18 @@ from backend.models import (
 
 router = APIRouter()
 
-_MOCK_MODE = os.getenv("DISCOVERY_MOCK", "false").lower() == "true"
 _FIXTURE_PATH = Path(__file__).parent.parent / "fixtures" / "mock_discovery_result.json"
+
+
+def _is_mock_mode() -> bool:
+    """Czy tryb testowy jest aktywny — czyta z config.json (Settings UI) z fallbackiem na env var."""
+    try:
+        from backend.config import get as cfg_get
+        if cfg_get("discovery_mock"):
+            return True
+    except Exception:
+        pass
+    return os.getenv("DISCOVERY_MOCK", "false").lower() == "true"
 
 # Mapowanie węzłów na numery kroków (dla progress 0-8)
 NODE_PROGRESS = {
@@ -88,6 +98,14 @@ async def _run_discovery_task(
     from product_discovery.workflows.discovery_graph import run_discovery
 
     await update_session_status(session_id, "running", progress=0, log_entry="Discovery started")
+
+    # Ustaw język zgodny z ustawieniami użytkownika
+    try:
+        from backend.config import get as cfg_get
+        from product_discovery.i18n import set_default_language
+        set_default_language(cfg_get("language") or "pl")
+    except Exception:
+        pass
 
     async def progress_callback(node_name: str, message: str = ""):
         """Async callback wywoływany przez węzły grafu — zapisuje postęp do SQLite."""
@@ -181,7 +199,7 @@ async def run_discovery_endpoint(
 
     await create_session(session_id, request.project_name, request.mode, created_at)
 
-    if _MOCK_MODE:
+    if _is_mock_mode():
         background_tasks.add_task(_run_mock_task, session_id=session_id, project_name=request.project_name)
     else:
         background_tasks.add_task(

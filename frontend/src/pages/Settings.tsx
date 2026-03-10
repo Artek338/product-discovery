@@ -24,6 +24,7 @@ function ApiKeyField({
   hint,
   isSet,
   preview,
+  language = 'pl',
 }: {
   label: string
   value: string
@@ -32,6 +33,7 @@ function ApiKeyField({
   hint?: string
   isSet?: boolean
   preview?: string
+  language?: 'pl' | 'en'
 }) {
   const [show, setShow] = useState(false)
   const inputId = useId()
@@ -39,32 +41,32 @@ function ApiKeyField({
   return (
     <div className="mb-4">
       <div className="flex items-center gap-2 mb-1.5">
-        <label htmlFor={inputId} className="block text-sm font-sans font-semibold text-[#0D2535]">{label}</label>
+        <label htmlFor={inputId} className="block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200">{label}</label>
         {isSet && !value && (
-          <span className="text-xs text-emerald-600 font-sans font-medium bg-emerald-50 px-2 py-0.5 rounded-full">
+          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-sans font-medium bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
             {preview || '****'}
           </span>
         )}
       </div>
       <div className="relative">
-        <Key size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <Key size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
         <input
           id={inputId}
           type={show ? 'text' : 'password'}
           value={value}
           onChange={e => onChange(e.target.value)}
-          placeholder={isSet && !value ? '(pozostaw puste żeby zachować)' : placeholder}
-          className="w-full bg-white border border-[#E2E8F0] rounded-lg pl-9 pr-10 py-2.5 text-[#0D2535] text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
+          placeholder={isSet && !value ? t(language, 'set_key_keep') : placeholder}
+          className="w-full bg-white dark:bg-[#111111] border border-[#E2E8F0] dark:border-[#333333] rounded-lg pl-9 pr-10 py-2.5 text-[#0D2535] dark:text-slate-200 dark:placeholder:text-slate-600 text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
         />
         <button
           type="button"
           onClick={() => setShow(v => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0D2535] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-[#0D2535] dark:hover:text-slate-200 transition-colors"
         >
           {show ? <EyeOff size={15} /> : <Eye size={15} />}
         </button>
       </div>
-      {hint && <p className="text-xs text-slate-400 font-sans mt-1.5">{hint}</p>}
+      {hint && <p className="text-xs text-slate-400 dark:text-slate-500 font-sans mt-1.5">{hint}</p>}
     </div>
   )
 }
@@ -74,7 +76,7 @@ function SectionHeader({
   icon: Icon,
   title,
   badge,
-  iconBg = 'bg-[#F0FDFA]',
+  iconBg = 'bg-[#F0FDFA] dark:bg-teal-900/30',
   iconColor = '#14B8A6',
 }: {
   icon: React.ElementType
@@ -88,7 +90,7 @@ function SectionHeader({
       <div className={`w-8 h-8 rounded-lg ${iconBg} flex items-center justify-center`}>
         <Icon size={16} style={{ color: iconColor }} />
       </div>
-      <h2 className="font-sans font-semibold text-[#0D2535]">{title}</h2>
+      <h2 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100">{title}</h2>
       {badge}
     </div>
   )
@@ -96,18 +98,18 @@ function SectionHeader({
 
 function StatusBadge({ ok, labelOk, labelNo }: { ok: boolean; labelOk: string; labelNo: string }) {
   return ok ? (
-    <span className="flex items-center gap-1 text-xs font-sans font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+    <span className="flex items-center gap-1 text-xs font-sans font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">
       <CheckCircle2 size={11} /> {labelOk}
     </span>
   ) : (
-    <span className="flex items-center gap-1 text-xs font-sans font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full">
+    <span className="flex items-center gap-1 text-xs font-sans font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-[#2A2A2A] px-2 py-0.5 rounded-full">
       <AlertCircle size={11} /> {labelNo}
     </span>
   )
 }
 
 export default function Settings() {
-  const { language, setLanguage } = useAppStore()
+  const { language, setLanguage, setDiscoveryMock: setStoreMock, setLlmModel: setStoreLlmModel } = useAppStore()
 
   // Aktualny stan z backendu
   const [serverSettings, setServerSettings] = useState<AppSettings | null>(null)
@@ -144,7 +146,9 @@ export default function Settings() {
       setSlackAuto(s.slack_auto_notify)
       // miro_board_id nie jest zwracany z serwera (bezpieczeństwo) — pole pozostaje puste
       setLlmModel(s.llm_model)
+      setStoreLlmModel(s.llm_model)
       setDiscoveryMock(s.discovery_mock)
+      setStoreMock(s.discovery_mock)
       // Nie wypełniamy pól kluczy — użytkownik musi je wpisać świadomie
     } catch {
       setError('Nie można wczytać ustawień z serwera')
@@ -172,14 +176,14 @@ export default function Settings() {
     setError('')
     try {
       const updates: Record<string, unknown> = {
-        data_dir: dataDir,
         slack_auto_notify: slackAuto,
-        miro_board_id: miroBoard,
         llm_model: llmModel,
         language,
         discovery_mock: discoveryMock,
       }
-      // Wysyłaj tylko niepuste klucze (żeby nie nadpisać pustym)
+      // Wysyłaj tylko niepuste wartości (żeby nie nadpisać pustym stringiem)
+      if (dataDir.trim()) updates.data_dir = dataDir.trim()
+      if (miroBoard.trim()) updates.miro_board_id = miroBoard.trim()
       if (anthropicKey) updates.anthropic_api_key = anthropicKey
       if (perplexityKey) updates.perplexity_api_key = perplexityKey
       if (serperKey) updates.serper_api_key = serperKey
@@ -191,6 +195,8 @@ export default function Settings() {
 
       const updated = await api.updateSettings(updates)
       setServerSettings(updated)
+      setStoreMock(discoveryMock)
+      setStoreLlmModel(llmModel)
       setSaved(true)
       // Wyczyść pola kluczy po zapisaniu
       setAnthropicKey('')
@@ -247,7 +253,7 @@ export default function Settings() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto p-8 text-slate-400 font-sans">
+      <div className="max-w-2xl mx-auto p-8 text-slate-400 dark:text-slate-500 font-sans">
         <RefreshCw size={16} className="inline mr-2 animate-spin" />
         {t(language, 'set_loading')}
       </div>
@@ -257,10 +263,10 @@ export default function Settings() {
   return (
     <div className="max-w-2xl mx-auto p-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-sans font-semibold text-[#0D2535] mb-1">
+        <h1 className="text-2xl font-sans font-semibold text-[#0D2535] dark:text-slate-100 mb-1">
           {t(language, 'set_title')}
         </h1>
-        <p className="text-slate-500 font-sans text-sm">
+        <p className="text-slate-500 dark:text-slate-400 font-sans text-sm">
           {language === 'pl'
             ? 'Konfiguracja jest przechowywana lokalnie na Twoim komputerze (~/.product-discovery/config.json).'
             : 'Settings are stored locally on your computer (~/.product-discovery/config.json).'}
@@ -268,7 +274,7 @@ export default function Settings() {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 font-sans flex items-center gap-2">
+        <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-sm text-red-700 dark:text-red-400 font-sans flex items-center gap-2">
           <AlertCircle size={15} /> {error}
         </div>
       )}
@@ -276,31 +282,31 @@ export default function Settings() {
       <div className="space-y-6">
 
         {/* ── Język ────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <SectionHeader icon={Globe} title={t(language, 'set_lang_title')} />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_lang_desc')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_lang_desc')}</p>
           <div className="flex gap-3">
             {(['pl', 'en'] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setLanguage(lang)}
                 className={`flex-1 py-3 rounded-xl border-2 text-sm font-sans font-semibold transition-all ${language === lang
-                    ? 'border-[#14B8A6] bg-[#F0FDFA] text-[#0D9488]'
-                    : 'border-[#E2E8F0] bg-white text-slate-500 hover:border-[#CCFBF1]'
+                    ? 'border-[#14B8A6] bg-[#F0FDFA] dark:bg-teal-900/30 text-[#0D9488] dark:text-teal-400'
+                    : 'border-[#E2E8F0] dark:border-[#333333] bg-white dark:bg-[#111111] text-slate-500 dark:text-slate-400 hover:border-[#CCFBF1] dark:hover:border-teal-900/50'
                   }`}
               >
-                {lang === 'pl' ? '🇵🇱  Polski' : '🇬🇧  English'}
+                {lang === 'pl' ? 'Polski' : 'Angielski'}
               </button>
             ))}
           </div>
         </div>
 
         {/* ── Folder danych ────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-          <SectionHeader icon={Folder} title={t(language, 'set_data_title')} />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_data_desc')}</p>
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
+          <SectionHeader icon={Folder} title={t(language, 'set_data_title')} iconBg="bg-[#F0FDFA] dark:bg-teal-900/30" />
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_data_desc')}</p>
           <div className="mb-2">
-            <label htmlFor="data-dir-inp" className="block text-sm font-sans font-semibold text-[#0D2535] mb-1.5">
+            <label htmlFor="data-dir-inp" className="block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200 mb-1.5">
               {t(language, 'set_data_dir')}
             </label>
             <input
@@ -309,10 +315,10 @@ export default function Settings() {
               value={dataDir}
               onChange={e => setDataDir(e.target.value)}
               placeholder={t(language, 'set_data_dir_ph')}
-              className="w-full bg-white border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-[#0D2535] text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
+              className="w-full bg-white dark:bg-[#111111] border border-[#E2E8F0] dark:border-[#333333] rounded-lg px-4 py-2.5 text-[#0D2535] dark:text-slate-200 dark:placeholder:text-slate-600 text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
             />
           </div>
-          <p className="text-xs text-slate-400 font-sans mt-1">
+          <p className="text-xs text-slate-400 dark:text-slate-500 font-sans mt-1">
             {language === 'pl'
               ? 'W tym folderze znajdziesz: discovery.db, google_tokens.json, projekty.'
               : 'This folder contains: discovery.db, google_tokens.json, projects.'}
@@ -320,8 +326,8 @@ export default function Settings() {
         </div>
 
         {/* ── API & Model ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-          <SectionHeader icon={Cpu} title={t(language, 'set_api_title')} />
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
+          <SectionHeader icon={Cpu} title={t(language, 'set_api_title')} iconBg="bg-[#F0FDFA] dark:bg-teal-900/30" />
 
           <ApiKeyField
             label={t(language, 'set_api_key')}
@@ -331,30 +337,31 @@ export default function Settings() {
             hint={t(language, 'set_api_key_hint')}
             isSet={serverSettings?.anthropic_api_key_set}
             preview={serverSettings?.anthropic_api_key_preview}
+            language={language}
           />
 
           <div>
-            <label htmlFor="model-select-inp" className="block text-sm font-sans font-semibold text-[#0D2535] mb-1.5">
+            <label htmlFor="model-select-inp" className="block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200 mb-1.5">
               {t(language, 'set_model')}
             </label>
             <select
               id="model-select-inp"
               value={llmModel}
               onChange={e => setLlmModel(e.target.value)}
-              className="w-full bg-white border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-[#0D2535] text-sm font-sans outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all cursor-pointer"
+              className="w-full bg-white dark:bg-[#111111] border border-[#E2E8F0] dark:border-[#333333] rounded-lg px-4 py-2.5 text-[#0D2535] dark:text-slate-200 text-sm font-sans outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all cursor-pointer"
             >
               {MODELS.map(m => (
                 <option key={m.value} value={m.value}>{m.label}</option>
               ))}
             </select>
-            <p className="text-xs text-slate-400 font-sans mt-1.5">{t(language, 'set_model_hint')}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-sans mt-1.5">{t(language, 'set_model_hint')}</p>
           </div>
         </div>
 
         {/* ── Klucze Research API ──────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
-          <SectionHeader icon={Settings2} title={t(language, 'set_research_title')} />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_research_desc')}</p>
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
+          <SectionHeader icon={Settings2} title={t(language, 'set_research_title')} iconBg="bg-[#F0FDFA] dark:bg-teal-900/30" />
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_research_desc')}</p>
 
           <ApiKeyField
             label={`Perplexity API Key (${t(language, 'set_optional')})`}
@@ -362,6 +369,7 @@ export default function Settings() {
             onChange={setPerplexityKey}
             placeholder="pplx-..."
             isSet={serverSettings?.perplexity_api_key_set}
+            language={language}
           />
           <ApiKeyField
             label={`Serper API Key (${t(language, 'set_optional')})`}
@@ -369,6 +377,7 @@ export default function Settings() {
             onChange={setSerperKey}
             placeholder="serper-..."
             isSet={serverSettings?.serper_api_key_set}
+            language={language}
           />
           <ApiKeyField
             label={`Brave Search API Key (${t(language, 'set_optional')})`}
@@ -376,11 +385,12 @@ export default function Settings() {
             onChange={setBraveKey}
             placeholder="BSAv..."
             isSet={serverSettings?.brave_api_key_set}
+            language={language}
           />
         </div>
 
         {/* ── Miro ─────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <SectionHeader
             icon={Settings2}
             title={t(language, 'set_miro_title')}
@@ -391,10 +401,10 @@ export default function Settings() {
                 labelNo={t(language, 'set_not_configured')}
               />
             }
-            iconBg="bg-yellow-50"
+            iconBg="bg-yellow-50 dark:bg-yellow-900/20"
             iconColor="#F59E0B"
           />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_miro_desc')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_miro_desc')}</p>
 
           <ApiKeyField
             label={t(language, 'set_miro_token')}
@@ -402,10 +412,11 @@ export default function Settings() {
             onChange={setMiroToken}
             placeholder={t(language, 'set_miro_token_ph')}
             isSet={serverSettings?.miro_access_token_set}
+            language={language}
           />
 
           <div>
-            <label htmlFor="miro-board-inp" className="block text-sm font-sans font-semibold text-[#0D2535] mb-1.5">
+            <label htmlFor="miro-board-inp" className="block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200 mb-1.5">
               {t(language, 'set_miro_board')}
             </label>
             <input
@@ -414,13 +425,13 @@ export default function Settings() {
               value={miroBoard}
               onChange={e => setMiroBoard(e.target.value)}
               placeholder={t(language, 'set_miro_board_ph')}
-              className="w-full bg-white border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-[#0D2535] text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
+              className="w-full bg-white dark:bg-[#111111] border border-[#E2E8F0] dark:border-[#333333] rounded-lg px-4 py-2.5 text-[#0D2535] dark:text-slate-200 dark:placeholder:text-slate-600 text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
             />
           </div>
         </div>
 
         {/* ── Slack ────────────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <SectionHeader
             icon={Slack}
             title={t(language, 'set_slack_title')}
@@ -431,13 +442,13 @@ export default function Settings() {
                 labelNo={t(language, 'set_not_configured')}
               />
             }
-            iconBg="bg-purple-50"
+            iconBg="bg-purple-50 dark:bg-purple-900/20"
             iconColor="#7C3AED"
           />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_slack_desc')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_slack_desc')}</p>
 
           <div className="mb-4">
-            <label htmlFor="slack-url-inp" className="block text-sm font-sans font-semibold text-[#0D2535] mb-1.5">
+            <label htmlFor="slack-url-inp" className="block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200 mb-1.5">
               {t(language, 'set_slack_url')}
             </label>
             <input
@@ -445,8 +456,8 @@ export default function Settings() {
               type="url"
               value={slackUrl}
               onChange={e => setSlackUrl(e.target.value)}
-              placeholder={serverSettings?.slack_webhook_url_set ? '(skonfigurowany — wpisz nowy żeby zmienić)' : t(language, 'set_slack_url_ph')}
-              className="w-full bg-white border border-[#E2E8F0] rounded-lg px-4 py-2.5 text-[#0D2535] text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
+              placeholder={serverSettings?.slack_webhook_url_set ? t(language, 'set_already_set') : t(language, 'set_slack_url_ph')}
+              className="w-full bg-white dark:bg-[#111111] border border-[#E2E8F0] dark:border-[#333333] rounded-lg px-4 py-2.5 text-[#0D2535] dark:text-slate-200 dark:placeholder:text-slate-600 text-sm font-mono outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all"
             />
           </div>
 
@@ -460,16 +471,16 @@ export default function Settings() {
                 onChange={e => setSlackAuto(e.target.checked)}
                 className="sr-only"
               />
-              <div className={`w-10 h-5 rounded-full transition-colors ${slackAuto ? 'bg-[#14B8A6]' : 'bg-slate-300'}`}>
+              <div className={`w-10 h-5 rounded-full transition-colors ${slackAuto ? 'bg-[#14B8A6]' : 'bg-slate-300 dark:bg-slate-600'}`}>
                 <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${slackAuto ? 'translate-x-5' : ''}`} />
               </div>
             </div>
-            <span className="text-sm font-sans text-[#0D2535]">{t(language, 'set_slack_auto')}</span>
+            <span className="text-sm font-sans text-[#0D2535] dark:text-slate-300">{t(language, 'set_slack_auto')}</span>
           </label>
         </div>
 
         {/* ── Google Docs ──────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <SectionHeader
             icon={ExternalLink}
             title={t(language, 'set_google_title')}
@@ -480,13 +491,13 @@ export default function Settings() {
                 labelNo={t(language, 'set_google_not_connected')}
               />
             }
-            iconBg="bg-blue-50"
+            iconBg="bg-blue-50 dark:bg-blue-900/20"
             iconColor="#3B82F6"
           />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_google_desc')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_google_desc')}</p>
 
           {/* OAuth credentials */}
-          <div className="mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-500 font-sans">
+          <div className="mb-4 p-3 rounded-lg bg-slate-50 dark:bg-[#111111] border border-slate-200 dark:border-[#333333] text-xs text-slate-500 dark:text-slate-400 font-sans">
             {t(language, 'set_google_oauth_hint')}
           </div>
 
@@ -496,13 +507,15 @@ export default function Settings() {
             onChange={setGoogleClientId}
             placeholder="*.apps.googleusercontent.com"
             isSet={serverSettings?.google_client_id_set}
+            language={language}
           />
           <ApiKeyField
             label={t(language, 'set_google_client_secret')}
             value={googleClientSecret}
             onChange={setGoogleClientSecret}
             placeholder="GOCSPX-..."
-            isSet={serverSettings?.google_client_id_set}
+            isSet={serverSettings?.google_client_secret_set}
+            language={language}
           />
 
           {/* Login / Logout */}
@@ -510,13 +523,13 @@ export default function Settings() {
             <div className="flex items-center justify-between mt-2">
               <div className="flex items-center gap-2">
                 <CheckCircle2 size={15} className="text-emerald-500" />
-                <span className="text-sm font-sans text-emerald-700">
+                <span className="text-sm font-sans text-emerald-700 dark:text-emerald-400">
                   {googleStatus.email || t(language, 'set_google_connected')}
                 </span>
               </div>
               <button
                 onClick={handleGoogleLogout}
-                className="text-sm font-sans font-medium text-slate-500 hover:text-red-500 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+                className="text-sm font-sans font-medium text-slate-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 {t(language, 'set_google_logout')}
               </button>
@@ -525,7 +538,7 @@ export default function Settings() {
             <button
               onClick={handleGoogleLogin}
               disabled={googleLoading || (!serverSettings?.google_client_id_set && !googleClientId)}
-              className="w-full mt-2 py-2.5 rounded-lg border-2 border-[#4285F4] text-[#4285F4] text-sm font-sans font-semibold hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-2 py-2.5 rounded-lg border-2 border-[#4285F4] dark:border-blue-500 text-[#4285F4] dark:text-blue-400 text-sm font-sans font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {googleLoading ? (
                 <><RefreshCw size={14} className="animate-spin" /> {t(language, 'set_google_connecting')}</>
@@ -537,14 +550,14 @@ export default function Settings() {
         </div>
 
         {/* ── Tryb testowy ─────────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <SectionHeader
             icon={Settings2}
             title={t(language, 'set_mock_title')}
-            iconBg="bg-orange-50"
+            iconBg="bg-orange-50 dark:bg-orange-900/20"
             iconColor="#F59E0B"
           />
-          <p className="text-sm text-slate-500 font-sans mb-4">{t(language, 'set_mock_desc')}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-sans mb-4">{t(language, 'set_mock_desc')}</p>
           <label className="flex items-center gap-3 cursor-pointer">
             <div className="relative">
               <input
@@ -555,13 +568,13 @@ export default function Settings() {
                 onChange={e => setDiscoveryMock(e.target.checked)}
                 className="sr-only"
               />
-              <div className={`w-10 h-5 rounded-full transition-colors ${discoveryMock ? 'bg-orange-400' : 'bg-slate-300'}`}>
+              <div className={`w-10 h-5 rounded-full transition-colors ${discoveryMock ? 'bg-orange-400' : 'bg-slate-300 dark:bg-slate-600'}`}>
                 <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${discoveryMock ? 'translate-x-5' : ''}`} />
               </div>
             </div>
-            <span className="text-sm font-sans text-[#0D2535]">{t(language, 'set_mock_label')}</span>
+            <span className="text-sm font-sans text-[#0D2535] dark:text-slate-300">{t(language, 'set_mock_label')}</span>
             {discoveryMock && (
-              <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-sans font-medium">
+              <span className="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 px-2 py-0.5 rounded-full font-sans font-medium">
                 MOCK
               </span>
             )}
@@ -569,54 +582,54 @@ export default function Settings() {
         </div>
 
         {/* ── Zużycie i Koszty ─────────────────────────────────────── */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#E2E8F0]">
+        <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-6 shadow-sm border border-[#E2E8F0] dark:border-[#333333] transition-colors">
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center border border-orange-100">
+              <div className="w-8 h-8 rounded-lg bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center border border-orange-100 dark:border-orange-900/30">
                 <BarChart3 size={16} className="text-orange-500" />
               </div>
               <div>
-                <h2 className="font-sans font-semibold text-[#0D2535]">{t(language, 'usage_title')}</h2>
-                <p className="text-xs text-slate-500 font-sans mt-0.5">{t(language, 'usage_desc')}</p>
+                <h2 className="font-sans font-semibold text-[#0D2535] dark:text-slate-100">{t(language, 'usage_title')}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-sans mt-0.5">{t(language, 'usage_desc')}</p>
               </div>
             </div>
             <a
               href="https://console.anthropic.com"
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 text-xs font-sans font-medium text-slate-400 hover:text-[#14B8A6] transition-colors"
+              className="flex items-center gap-1.5 text-xs font-sans font-medium text-slate-400 dark:text-slate-500 hover:text-[#14B8A6] dark:hover:text-teal-400 transition-colors"
             >
               Anthropic Console <ExternalLink size={12} />
             </a>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+            <div className="p-4 rounded-xl border border-slate-100 dark:border-[#333333] bg-slate-50/50 dark:bg-[#111111]">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-sm font-sans font-medium text-slate-500">{t(language, 'usage_tokens')}</p>
-                <Cpu size={14} className="text-slate-400" />
+                <p className="text-sm font-sans font-medium text-slate-500 dark:text-slate-400">{t(language, 'usage_tokens')}</p>
+                <Cpu size={14} className="text-slate-400 dark:text-slate-500" />
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-sans font-bold text-[#0D2535]">—</span>
+                <span className="text-2xl font-sans font-bold text-[#0D2535] dark:text-slate-100">—</span>
               </div>
-              <p className="text-xs text-slate-400 font-sans mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-sans mt-2">
                 {language === 'pl' ? 'Sprawdź w Anthropic Console' : 'Check in Anthropic Console'}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+            <div className="p-4 rounded-xl border border-slate-100 dark:border-[#333333] bg-slate-50/50 dark:bg-[#111111]">
               <div className="flex justify-between items-start mb-2">
-                <p className="text-sm font-sans font-medium text-slate-500">{t(language, 'usage_cost')}</p>
-                <CreditCard size={14} className="text-slate-400" />
+                <p className="text-sm font-sans font-medium text-slate-500 dark:text-slate-400">{t(language, 'usage_cost')}</p>
+                <CreditCard size={14} className="text-slate-400 dark:text-slate-500" />
               </div>
               <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-sans font-bold text-[#0D2535]">—</span>
+                <span className="text-2xl font-sans font-bold text-[#0D2535] dark:text-slate-100">—</span>
               </div>
-              <p className="text-xs text-slate-400 font-sans mt-2">
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-sans mt-2">
                 {language === 'pl' ? 'Sprawdź w Anthropic Console' : 'Check in Anthropic Console'}
               </p>
             </div>
-            <div className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col justify-center items-center text-center">
-              <p className="text-xs text-slate-400 font-sans">
+            <div className="p-4 rounded-xl border border-slate-100 dark:border-[#333333] bg-slate-50/50 dark:bg-[#111111] flex flex-col justify-center items-center text-center">
+              <p className="text-xs text-slate-400 dark:text-slate-500 font-sans">
                 {language === 'pl'
                   ? 'Koszty są widoczne w Anthropic Console po zalogowaniu się kluczem API.'
                   : 'Costs are visible in Anthropic Console after logging in with your API key.'}

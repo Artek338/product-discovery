@@ -45,6 +45,7 @@ a ForcesDiagramNode blokuje GO gdy Anxiety > Pull (użytkownik nie zmieni narzę
 from __future__ import annotations
 
 import asyncio
+import os
 import re
 from dataclasses import dataclass
 from typing import Union
@@ -57,14 +58,39 @@ from product_discovery.agents.business_analyst.schemas import JTBDAnalysisResult
 from product_discovery.agents.synthetic_user.agent import generate_archetypes
 
 
-async def _run_with_retry(agent, prompt: str, max_retries: int = 2):
+def _make_runtime_model(model_name: str):
+    """
+    Tworzy instancję pydantic-ai AnthropicModel z podaną nazwą modelu.
+    Klucz API czyta z config.json (Settings UI) z fallbackiem na env var.
+    Zwraca None przy błędzie importu (np. w środowisku testowym).
+    """
+    try:
+        from pydantic_ai.models.anthropic import AnthropicModel
+        from pydantic_ai.providers.anthropic import AnthropicProvider
+        try:
+            from backend.config import get as cfg_get
+            api_key = cfg_get("anthropic_api_key") or os.getenv("ANTHROPIC_API_KEY", "")
+        except Exception:
+            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        return AnthropicModel(model_name, provider=AnthropicProvider(api_key=api_key))
+    except Exception:
+        return None
+
+
+async def _run_with_retry(agent, prompt: str, max_retries: int = 2, model=None):
     """
     Wywołuje agenta z retry i exponential backoff.
     Próby: 1 + max_retries. Czeka 2^attempt sekund między próbami (2s, 4s).
+
+    Args:
+        model: Opcjonalny override modelu (z config/Settings UI).
+               None = używaj domyślnego modelu agenta.
     """
     last_exc: Exception | None = None
     for attempt in range(max_retries + 1):
         try:
+            if model is not None:
+                return await agent.run(prompt, model=model)
             return await agent.run(prompt)
         except Exception as exc:
             last_exc = exc
@@ -101,7 +127,8 @@ class SyntheticInterviewNode(BaseNode[DiscoveryState]):
 
         try:
             archetypes = await generate_archetypes(
-                product_segment=ctx.state.idea_description[:500]
+                product_segment=ctx.state.idea_description[:500],
+                model=ctx.state.runtime_model,
             )
 
             # Zapisujemy archetypy jako stringi do state
@@ -155,13 +182,27 @@ class BehavioralInterviewNode(BaseNode[DiscoveryState]):
 
         # Jeśli founder podał notatki z wywiadów (--interviews), używamy ich jako główne źródło.
         # Jeśli nie — próbujemy wyciągnąć co jest z opisu pomysłu (słabsze dowody).
+
+        # Sekcja kontekstu BYS — wstrzykiwana do obu wariantów promptu jeśli istnieje
+        bys_section = ""
+        if ctx.state.before_you_start_context:
+            bys_section = (
+                "\n## KONTEKST 'ZANIM ZACZNIESZ'\n"
+                "Przed uruchomieniem Discovery użytkownik odpowiedział na serię pytań "
+                "kontekstowych. Poniższy kontekst pochodzi bezpośrednio od zleceniodawcy "
+                "i jest wiarygodnym źródłem informacji o sytuacji:\n\n"
+                f"{ctx.state.before_you_start_context}\n\n"
+                "Weź ten kontekst pod uwagę przy interpretacji insightów. "
+                "Szukaj spójności lub sprzeczności między kontekstem a materiałem z wywiadów.\n"
+            )
+
         if ctx.state.interview_notes:
             interviews_excerpt = ctx.state.interview_notes[:4000]
             prompt = f"""Przeanalizuj poniższe notatki z wywiadów i wyodrębnij KONKRETNE insighty behawioralne.
 
 ## POMYSŁ
 {ctx.state.idea_description}
-
+{bys_section}
 ## MATERIAŁ Z WYWIADÓW (źródło prawdziwych/syntetycznych insightów)
 {interviews_excerpt}
 
@@ -183,7 +224,7 @@ NIE GENERUJ fikcyjnych insightów — tylko to co jest w materiale z wywiadów.
             prompt = f"""Przeprowadź analizę wywiadów behawioralnych dla następującego pomysłu:
 
 {ctx.state.idea_description}
-
+{bys_section}
 ZADANIE:
 1. Na podstawie opisu — czy founder przeprowadził wywiady behawioralne?
 2. Wyodrębnij konkretne insighty (max 5) z zachowań użytkowników opisanych w tekście.
@@ -198,7 +239,7 @@ FORMAT INSIGHTÓW (każdy insight to osobna obserwacja z wywiadu):
 Jeśli opis NIE zawiera wywiadów behawioralnych — wyciągnij to co jest i zaznacz brak.
 """
 
-        result = await _run_with_retry(ba_agent, prompt)
+        result = await _run_with_retry(ba_agent, prompt, model=ctx.state.runtime_model)
 
         # Budujemy insighty z WSZYSTKICH pól JTBDAnalysisResult.
         # Dzięki temu zawsze mamy ≥3 insightów gdy agent zwrócił poprawny wynik.
@@ -277,7 +318,7 @@ class CompetitiveResearchNode(BaseNode[DiscoveryState]):
 Zwróć wynik jako JTBDAnalysisResult z competing_solutions wypełnionym na podstawie researchu.
 """
 
-        result = await _run_with_retry(ba_agent, category_prompt)
+        result = await _run_with_retry(ba_agent, category_prompt, model=ctx.state.runtime_model)
 
         # Budujemy competitive_report z competing_solutions
         if result.output.competing_solutions:
@@ -544,7 +585,7 @@ ZASADA WERDYKTU:
 - Jeśli SWITCH_LIKELY lub SWITCH_POSSIBLE + silny Push → kontynuuj z analizą JTBD
 """
 
-        result = await _run_with_retry(ba_agent, forces_prompt)
+        result = await _run_with_retry(ba_agent, forces_prompt, model=ctx.state.runtime_model)
 
         # Zapisujemy surowy reasoning jako forces_diagram do state
         ctx.state.forces_diagram = result.output.reasoning if result.output.reasoning else ""
@@ -665,7 +706,7 @@ ZASADY dla pól tekstowych:
 [2-3 konkretne kroki walidacyjne z kryterium sukcesu. Format: "Zrób X → Kryterium sukcesu: Y"]
 """
 
-        result = await _run_with_retry(ba_agent, synthesis_prompt)
+        result = await _run_with_retry(ba_agent, synthesis_prompt, model=ctx.state.runtime_model)
         ctx.state.jtbd_result = result.output  # Zapisujemy do state
 
         print(f"      Werdykt: {result.output.verdict} (confidence: {result.output.confidence}%)")
@@ -959,15 +1000,39 @@ async def run_discovery(
     Returns:
         DiscoveryResult z JTBDAnalysisResult i Scorecard
     """
+    # Sprawdź czy istnieje kontekst "Zanim zaczniesz" dla tego projektu
+    before_you_start_context = ""
+    try:
+        from product_discovery.agents.before_you_start.session import get_context_for_discovery
+        before_you_start_context = get_context_for_discovery(project_name)
+    except Exception:
+        pass  # BYS kontekst jest opcjonalny — nie blokuj Discovery przy błędzie importu
+
+    # Wczytaj model z ustawień użytkownika (Settings UI → config.json)
+    # Fallback: None → agenty używają swoich hardcoded modeli
+    runtime_model = None
+    try:
+        from backend.config import get as cfg_get
+        configured_model = cfg_get("llm_model") or "claude-sonnet-4-6"
+        runtime_model = _make_runtime_model(configured_model)
+        if runtime_model:
+            print(f"   🤖 Model: {configured_model} (z Settings)")
+    except Exception:
+        pass  # Bez configu (np. CLI bez backendu) — używaj domyślnych modeli
+
     state = DiscoveryState(
         project_name=project_name,
         idea_description=idea_description,
         interview_notes=interview_notes,
+        before_you_start_context=before_you_start_context,
         progress_callback=progress_callback,
+        runtime_model=runtime_model,
     )
 
     print(f"\n🔍 Discovery Phase: {project_name}")
     print(f"   Opis: {idea_description[:80]}...")
+    if before_you_start_context:
+        print("   📋 Znaleziono kontekst 'Zanim zaczniesz' — wstrzykiwanie do Discovery...")
 
     result = await DiscoveryGraph.run(SyntheticInterviewNode(), state=state)
     return result.output

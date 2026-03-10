@@ -56,6 +56,10 @@ interface AppState {
   globalSearchQuery: string
   setGlobalSearchQuery: (query: string) => void
 
+  // Mock mode (stan z serwera — nie persystowany w localStorage)
+  discoveryMock: boolean
+  setDiscoveryMock: (v: boolean) => void
+
   theme: ThemeMode
   setTheme: (theme: ThemeMode) => void
   toggleTheme: () => void
@@ -202,6 +206,9 @@ export const useAppStore = create<AppState>((set) => ({
 
   globalSearchQuery: '',
   setGlobalSearchQuery: (globalSearchQuery) => set({ globalSearchQuery }),
+
+  discoveryMock: false,
+  setDiscoveryMock: (discoveryMock) => set({ discoveryMock }),
 
   theme: (getLS('pd_theme', 'light') as ThemeMode),
   setTheme: (theme) => {

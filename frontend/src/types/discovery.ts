@@ -142,6 +142,7 @@ export interface AppSettings {
   llm_model: string
   language: string
   google_client_id_set: boolean
+  google_client_secret_set: boolean
   google_connected: boolean
   discovery_mock: boolean
 }

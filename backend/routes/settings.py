@@ -30,6 +30,7 @@ class SettingsResponse(BaseModel):
     llm_model: str
     language: str
     google_client_id_set: bool
+    google_client_secret_set: bool
     google_connected: bool
     discovery_mock: bool
 
@@ -85,6 +86,7 @@ async def get_settings():
         llm_model=cfg.get("llm_model", "claude-sonnet-4-6"),
         language=cfg.get("language", "pl"),
         google_client_id_set=bool(cfg.get("google_client_id")),
+        google_client_secret_set=bool(cfg.get("google_client_secret")),
         google_connected=bool(cfg.get("google_connected", False)),
         discovery_mock=bool(cfg.get("discovery_mock", False)),
     )
@@ -95,8 +97,11 @@ async def update_settings(body: SettingsUpdate):
     """Częściowy update ustawień. Pola None są ignorowane."""
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
 
-    # Walidacja ścieżki data_dir
+    # Walidacja ścieżki data_dir — odrzuć pusty string
     if "data_dir" in updates:
+        if not updates["data_dir"] or not updates["data_dir"].strip():
+            raise HTTPException(status_code=422, detail="Ścieżka folderu danych nie może być pusta")
+        updates["data_dir"] = updates["data_dir"].strip()
         try:
             Path(updates["data_dir"]).mkdir(parents=True, exist_ok=True)
         except (OSError, ValueError) as e:

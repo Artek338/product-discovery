@@ -54,9 +54,17 @@ class DiscoveryState:
     # v2.0: Mapa założeń
     assumption_map: list[str] = field(default_factory=list)
 
+    # Opcjonalny kontekst z sesji "Zanim zaczniesz" (wstrzykiwany do BehavioralInterviewNode)
+    # Pochodzi z: projects/{project_name}/before_you_start/bys_*.json → summary.context_for_discovery
+    before_you_start_context: str = ""
+
     # Opcjonalny callback wywoływany przez każdy węzeł (dla Web UI progress tracking)
     # Sygnatura: async def callback(node_name: str, message: str = "") -> None
     progress_callback: Optional[Any] = field(default=None, repr=False)
+
+    # Opcjonalny model runtime (z Settings UI) — override hardcoded modeli w agentach
+    # None = używaj domyślnego modelu zdefiniowanego w agencie
+    runtime_model: Optional[Any] = field(default=None, repr=False)
 
     @property
     def has_minimum_interviews(self) -> bool:

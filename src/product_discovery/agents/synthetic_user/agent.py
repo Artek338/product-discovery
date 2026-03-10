@@ -216,6 +216,7 @@ async def generate_archetypes(
     count: int = 4,
     market_type: str = "Mixed",
     additional_context: str = "",
+    model=None,
 ) -> List[SyntheticUserProfile]:
     """
     Dynamicznie generuje `count` archetypów użytkowników dla danego segmentu.
@@ -228,6 +229,7 @@ async def generate_archetypes(
         count: Liczba archetypów do wygenerowania (1–8)
         market_type: "B2C" | "B2B" | "SaaS" | "Enterprise" | "Mixed"
         additional_context: Dodatkowy kontekst demograficzny lub pytania własne
+        model: Opcjonalny override modelu pydantic-ai (z Settings UI). None = domyślny.
 
     Returns:
         Lista `count` SyntheticUserProfile, każdy z unikalną perspektywą
@@ -259,7 +261,10 @@ Twój archetyp MUSI reprezentować inną perspektywę niż powyższe.
 Pamiętaj: archetyp musi być głęboko zakorzeniony w kontekście segmentu "{product_segment}",
 nie w ogólnych ramach konsumenckich. Spraw, żeby ta osoba była wiarygodna i rozpoznawalna.
 """
-        result = await synthetic_user_agent.run(prompt)
+        if model is not None:
+            result = await synthetic_user_agent.run(prompt, model=model)
+        else:
+            result = await synthetic_user_agent.run(prompt)
         archetypes.append(result.output)
         used_names.append(result.output.archetype_name)
 

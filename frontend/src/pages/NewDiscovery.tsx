@@ -210,7 +210,7 @@ function IdeationPanel({ onApply }: { onApply: (text: string) => void }) {
 
 export default function NewDiscovery() {
   const navigate = useNavigate()
-  const { language } = useAppStore()
+  const { language, discoveryMock } = useAppStore()
 
   const MODES: { value: DiscoveryMode; label: string; desc: string; dot: string; tooltip: string }[] = [
     {
@@ -324,6 +324,17 @@ export default function NewDiscovery() {
           {t(language, 'nd_subtitle')}
         </p>
       </div>
+
+      {discoveryMock && (
+        <div className="mb-6 flex items-center gap-3 px-4 py-3 rounded-xl bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50">
+          <span className="text-xs font-sans font-bold bg-orange-400 text-white px-2 py-0.5 rounded-full shrink-0">MOCK</span>
+          <p className="text-sm font-sans text-orange-700 dark:text-orange-300">
+            {language === 'pl'
+              ? 'Tryb testowy aktywny — Discovery użyje gotowego fixture (~3s, $0). Wyłącz w Ustawieniach.'
+              : 'Test mode active — Discovery will use a fixture response (~3s, $0). Disable in Settings.'}
+          </p>
+        </div>
+      )}
 
       <div className="bg-white dark:bg-[#1A1A1A] rounded-2xl p-8 shadow-sm border border-[#E2E8F0] dark:border-[#333333] space-y-8 transition-colors">
         {/* Nazwa projektu */}
@@ -515,10 +526,9 @@ export default function NewDiscovery() {
               <input type="file" multiple accept=".md,.txt" className="hidden" onChange={handleFileUpload} />
             </label>
 
-            <button
-              type="button"
-              onClick={() => alert(language === 'pl' ? 'Integracja z Google Drive wkrótce!' : 'Google Drive integration coming soon!')}
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs text-[#0D2535] dark:text-slate-300 font-sans font-semibold bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] rounded-lg hover:bg-slate-50 dark:hover:bg-[#2A2A2A] hover:border-slate-300 transition-colors shadow-sm"
+            <span
+              title={language === 'pl' ? 'Integracja z Google Drive — wkrótce' : 'Google Drive integration — coming soon'}
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs text-slate-300 dark:text-slate-600 font-sans font-semibold bg-white dark:bg-[#1A1A1A] border border-[#E2E8F0] dark:border-[#333333] rounded-lg cursor-not-allowed opacity-50 shadow-sm select-none"
             >
               <svg className="w-4 h-4" viewBox="0 0 87.3 78.4" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M6.6 66.85l15.65 27.25h52.2L58.85 66.85z" fill="#0066da" />
@@ -529,7 +539,7 @@ export default function NewDiscovery() {
                 <path d="M58.85 29.7L43.2 2.5 11.85 56.9h31.35z" fill="#ffba00" />
               </svg>
               Google Drive
-            </button>
+            </span>
           </div>
         </div>
 

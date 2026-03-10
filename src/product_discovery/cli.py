@@ -585,6 +585,185 @@ def cmd_industry(args) -> None:
         print(f"✅ Imported {len(text)} chars → {ctx.slug}")
 
 
+async def cmd_before_you_start(args) -> None:
+    """
+    Interaktywna sesja 'Zanim zaczniesz' — zbieranie kontekstu przed Discovery.
+
+    Zadaje pytania jedno po raz, dynamicznie na podstawie poprzednich odpowiedzi.
+    Wynik zapisuje lokalnie i wstrzykuje do kolejnego uruchomienia Discovery.
+    """
+    from product_discovery.agents.before_you_start.agent import (
+        bys_question_agent,
+        bys_summary_agent,
+    )
+    from product_discovery.agents.before_you_start.session import (
+        BYSSession,
+        load_latest_session,
+        save_session,
+    )
+
+    project = args.project
+    output_dir = getattr(args, "output", "projects")
+    lang = getattr(args, "lang", "pl")
+    topic = getattr(args, "topic", None) or ""
+
+    # --show: wyświetl zapisane podsumowanie bez nowej sesji
+    if getattr(args, "show", False):
+        session = load_latest_session(project, output_dir=output_dir)
+        if not session or not session.summary:
+            print(f"❌ Brak zapisanego kontekstu dla projektu '{project}'.")
+            print(f"   Uruchom: product-discovery before-you-start --project {project}")
+            sys.exit(1)
+        _bys_print_summary(session)
+        return
+
+    # Nowa sesja
+    print("\n" + "=" * 60)
+    print("ZANIM ZACZNIESZ — Zbieranie kontekstu przed Discovery")
+    print("=" * 60)
+    print(f"Projekt: {project}")
+    print("\nZasady:")
+    print("  • Odpowiadaj szczerze i konkretnie")
+    print("  • Wpisz 'done' lub 'koniec' żeby zakończyć wcześniej")
+    print("  • Sesja zakończy się automatycznie po max 15 pytaniach")
+    print()
+
+    if not topic:
+        topic = input(
+            "O czym chcesz rozmawiać? (np. 'walidacja pomysłu SaaS dla designerów'): "
+        ).strip()
+        if not topic:
+            topic = "Product Discovery"
+
+    session = BYSSession.new(project=project, topic=topic, lang=lang)
+
+    MAX_QUESTIONS = 15
+
+    try:
+        for q_num in range(1, MAX_QUESTIONS + 1):
+            history_text = _bys_build_history(session)
+            limit_hint = (
+                "\nZbliżamy się do limitu pytań — jeśli masz wystarczający kontekst, zakończ sesję."
+                if q_num >= 12
+                else ""
+            )
+            prompt = (
+                f"Temat sesji: {topic}\n\n"
+                f"{history_text}\n\n"
+                f"Jesteś na pytaniu nr {q_num}/{MAX_QUESTIONS}.{limit_hint}\n"
+                "Wygeneruj następne pytanie."
+            )
+
+            print(f"\n[{q_num}/{MAX_QUESTIONS}] Generuję pytanie...")
+            result = await bys_question_agent.run(prompt)
+            next_q = result.output
+
+            if next_q.is_complete:
+                print("\n✅ Agent zebrał wystarczający kontekst.")
+                if next_q.completion_reason:
+                    print(f"   Powód: {next_q.completion_reason}")
+                break
+
+            print(f"\nPytanie: {next_q.question}")
+            print()
+            answer = input("Twoja odpowiedź: ").strip()
+
+            if answer.lower() in ("done", "koniec", "q", "quit", "exit"):
+                print("\nZakończyłeś sesję wcześniej.")
+                session.status = "interrupted"
+                break
+
+            if not answer:
+                print("(Pominięto puste pytanie)")
+                q_num -= 1  # nie liczymy pustej odpowiedzi
+                continue
+
+            session.add_qa(next_q.question, answer)
+
+        else:
+            print(f"\n📝 Osiągnięto limit {MAX_QUESTIONS} pytań.")
+
+    except KeyboardInterrupt:
+        print("\n\n⚠️ Sesja przerwana przez Ctrl+C.")
+        session.status = "interrupted"
+
+    # Generuj podsumowanie jeśli zebraliśmy ≥2 pary Q&A
+    if len(session.qa_pairs) >= 2:
+        print("\n📊 Generuję podsumowanie kontekstu...")
+        try:
+            summary_prompt = _bys_build_summary_prompt(session)
+            result = await bys_summary_agent.run(summary_prompt)
+            session.summary = result.output
+            if session.status == "in_progress":
+                session.status = "completed"
+        except Exception as e:
+            print(f"⚠️ Nie udało się wygenerować podsumowania: {e}")
+    elif session.status == "in_progress":
+        session.status = "interrupted"
+
+    # Zapisz sesję
+    saved_path = save_session(session, output_dir=output_dir)
+    print(f"\n💾 Sesja zapisana: {saved_path}")
+
+    if session.summary:
+        _bys_print_summary(session)
+        print(
+            f"\n✅ Kontekst zostanie automatycznie wstrzyknięty do Discovery "
+            f"dla projektu '{project}'."
+        )
+        print(f"   Uruchom: product-discovery \"opis pomysłu\" --project {project}")
+    else:
+        print("\n⚠️ Brak podsumowania — sesja była za krótka (min 2 odpowiedzi).")
+        print("   Uruchom ponownie: product-discovery before-you-start "
+              f"--project {project}")
+
+
+def _bys_build_history(session) -> str:
+    """Buduje sekcję historii Q&A dla promptu agenta."""
+    if not session.qa_pairs:
+        return "Brak poprzednich pytań — to jest pierwsze pytanie w sesji."
+    lines = ["Dotychczasowe pytania i odpowiedzi:"]
+    for qa in session.qa_pairs:
+        lines.append(f"\nPytanie {qa.order}: {qa.question}")
+        lines.append(f"Odpowiedź: {qa.answer}")
+    return "\n".join(lines)
+
+
+def _bys_build_summary_prompt(session) -> str:
+    """Buduje prompt do wygenerowania podsumowania sesji."""
+    lines = [f"Temat sesji: {session.topic}", "", "Pełny zapis Q&A:"]
+    for qa in session.qa_pairs:
+        lines.append(f"\nPytanie {qa.order}: {qa.question}")
+        lines.append(f"Odpowiedź: {qa.answer}")
+    lines.append(
+        "\n\nNa podstawie tej sesji wygeneruj ustrukturyzowane podsumowanie:\n"
+        "- core_problem: Główny problem/cel (konkretnie, 2-4 zdania)\n"
+        "- key_assumptions: Lista kluczowych założeń użytkownika (2-8 pozycji)\n"
+        "- open_questions: Nierozstrzygnięte pytania do zbadania w Discovery\n"
+        "- context_for_discovery: Bogaty kontekst dla Business Analyst agenta "
+        "(segment, obecny proces, zmierzone bóle, ograniczenia, czego szukamy)"
+    )
+    return "\n".join(lines)
+
+
+def _bys_print_summary(session) -> None:
+    """Wyświetla podsumowanie sesji BYS w czytelnym formacie."""
+    summary = session.summary
+    print(f"\n{'=' * 60}")
+    print(f"PODSUMOWANIE SESJI: {session.topic}")
+    print(f"Projekt: {session.project} | Data: {session.created_at[:10]}")
+    print(f"{'=' * 60}")
+    print(f"\n📌 GŁÓWNY PROBLEM:\n{summary.core_problem}")
+    print(f"\n🔑 KLUCZOWE ZAŁOŻENIA:")
+    for i, assumption in enumerate(summary.key_assumptions, 1):
+        print(f"  {i}. {assumption}")
+    print(f"\n❓ OTWARTE PYTANIA DO DISCOVERY:")
+    for i, question in enumerate(summary.open_questions, 1):
+        print(f"  {i}. {question}")
+    print(f"\n🔍 KONTEKST DLA DISCOVERY:\n{summary.context_for_discovery}")
+    print(f"\n{'=' * 60}")
+
+
 def cmd_solutions(args) -> None:
     """Manage solutions impact/effort matrix."""
     from product_discovery.tools.impact_effort import SolutionBoard
@@ -724,6 +903,28 @@ def main():
     tpl_parser = subparsers.add_parser("templates", help="List session templates")
     tpl_parser.add_argument("--show", help="Show specific template by ID")
 
+    # before-you-start subcommand — sesja pytań przed Discovery
+    bys_parser = subparsers.add_parser(
+        "before-you-start",
+        help="Zbierz kontekst przed Discovery (sesja interaktywna)",
+    )
+    bys_parser.add_argument("--project", "-p", required=True, help="Nazwa projektu")
+    bys_parser.add_argument("--output", "-o", default="projects", help="Katalog output")
+    bys_parser.add_argument(
+        "--topic", "-t", help="Opcjonalny temat startowy (jeśli brak, agent pyta)"
+    )
+    bys_parser.add_argument(
+        "--lang",
+        default="pl",
+        choices=["pl", "en"],
+        help="Język sesji (domyślnie: pl)",
+    )
+    bys_parser.add_argument(
+        "--show",
+        action="store_true",
+        help="Wyświetl zapisane podsumowanie bez nowej sesji",
+    )
+
     # simulate subcommand — interaktywny symulator wywiadów
     sim_parser = subparsers.add_parser(
         "simulate",
@@ -823,7 +1024,7 @@ def main():
     known_commands = {
         "generate-prd", "import-interviews", "export-report", "assumptions",
         "export-miro", "export-gdocs", "industry", "solutions", "score", "templates",
-        "simulate",
+        "simulate", "before-you-start",
     }
     raw_args = sys.argv[1:]
     idea_text = None
@@ -887,6 +1088,12 @@ def main():
 
     if args.command == "templates":
         cmd_templates(args)
+        return
+
+    if args.command == "before-you-start":
+        if not check_environment():
+            sys.exit(1)
+        asyncio.run(cmd_before_you_start(args))
         return
 
     if args.command == "simulate":
