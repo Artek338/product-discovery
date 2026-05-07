@@ -54,12 +54,7 @@ def export_pdf(html_path: Path, output_dir: Optional[Path] = None) -> Path:
     if output_dir is None:
         output_dir = html_path.parent
 
-    pdf_path = output_dir / html_path.stem.replace("REPORT", "REPORT_PDF") + ".pdf"
-    if not pdf_path.suffix:
-        pdf_path = Path(str(pdf_path) + ".pdf")
-
-    # Fix: construct proper path
-    pdf_name = html_path.stem + ".pdf"
+    pdf_name = html_path.stem.replace("REPORT", "REPORT_PDF") + ".pdf"
     pdf_path = output_dir / pdf_name
 
     # Try Playwright first (best quality)

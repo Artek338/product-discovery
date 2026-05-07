@@ -60,6 +60,8 @@ class DiscoveryResultResponse(BaseModel):
     forces_report: str = ""
     assumption_map: str = ""
     synthetic_archetypes: str = ""
+    interview_insights: List[str] = []
+    interview_notes: str = ""
     duration_hours: float = 0.0
 
 

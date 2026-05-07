@@ -1,0 +1,230 @@
+/**
+ * Product Builder — Reusable Component Classes
+ *
+ * Copy this into your project's index.css (inside @layer components)
+ * or import it: @import './docs/style-guide/component-classes.css';
+ *
+ * These classes work with the Product Builder Tailwind preset.
+ * Requires: Tailwind CSS, @tailwindcss/typography plugin.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════
+   BASE LAYER
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer base {
+  body {
+    overflow-x: hidden;
+    @apply antialiased font-sans bg-[#EFF2F7] dark:bg-[#111111] text-[#0D2535] dark:text-slate-200 transition-colors;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-mono;
+  }
+
+  /* ── Markdown Table Styles ── */
+  .prose table {
+    @apply w-full text-left border-collapse my-4 text-sm font-sans;
+  }
+  .prose thead {
+    @apply bg-slate-50 dark:bg-[#1A1A1A] border-b border-[#E2E8F0] dark:border-[#333333];
+  }
+  .prose th {
+    @apply p-3 font-semibold text-slate-600 dark:text-slate-300;
+  }
+  .prose td {
+    @apply p-3 border-b border-[#E2E8F0] dark:border-[#333333] align-top;
+  }
+  .prose tr:last-child td {
+    @apply border-b-0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES LAYER
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  .hide-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COMPONENTS LAYER
+   ═══════════════════════════════════════════════════════════════ */
+
+@layer components {
+
+  /* ── Karty ────────────────────────────────────────────────── */
+
+  .card {
+    @apply bg-[#FFFFFF] dark:bg-[#1A1A1A] rounded-2xl border border-[#E2E8F0] dark:border-[#333333] shadow-sm transition-colors;
+  }
+
+  .card-padding {
+    @apply p-6;
+  }
+
+  .card-title {
+    @apply font-sans font-semibold text-[#0D2535] dark:text-slate-100 text-lg;
+  }
+
+  /* ── Przyciski ────────────────────────────────────────────── */
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 bg-[#14B8A6] text-[#FFFFFF] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#2DD4BF] focus:outline-none focus:ring-2 focus:ring-[#14B8A6] disabled:bg-[#E2E8F0] disabled:text-[#94A3B8] disabled:cursor-not-allowed transition-colors;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 bg-[#FFFFFF] text-[#14B8A6] px-5 py-[9px] rounded-[8px] text-sm font-semibold font-sans border border-[#14B8A6] hover:bg-[#CCFBF1] focus:outline-none focus:ring-2 focus:ring-[#14B8A6] transition-colors;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 bg-[#CCFBF1] text-[#0D9488] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#14B8A6] hover:text-[#FFFFFF] focus:outline-none transition-colors;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 bg-[#EF4444] text-[#FFFFFF] px-5 py-[10px] rounded-[8px] text-sm font-semibold font-sans hover:bg-[#DC2626] focus:outline-none focus:ring-2 focus:ring-[#EF4444] transition-colors;
+  }
+
+  /* ── Pola formularzy ──────────────────────────────────────── */
+
+  .input {
+    @apply w-full rounded-[8px] border border-[#E2E8F0] dark:border-[#333333] px-[14px] py-[10px] text-sm font-sans text-[#0D2535] dark:text-slate-200 bg-[#FFFFFF] dark:bg-[#111111] placeholder:text-[#94A3B8] dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#14B8A6] focus:border-[#14B8A6] focus:bg-[#F0FDFA] disabled:bg-[#F8FAFC] disabled:text-[#94A3B8] disabled:border-[#E2E8F0] transition-colors;
+  }
+
+  .select {
+    @apply w-full rounded-[8px] border border-[#E2E8F0] dark:border-[#333333] px-4 py-[10px] text-sm font-sans text-[#0D2535] dark:text-slate-200 bg-[#FFFFFF] dark:bg-[#111111] outline-none focus:border-[#14B8A6] focus:ring-1 focus:ring-[#14B8A6] transition-all cursor-pointer;
+  }
+
+  .label {
+    @apply block text-sm font-sans font-semibold text-[#0D2535] dark:text-slate-200 mb-1.5;
+  }
+
+  .hint {
+    @apply text-xs text-slate-400 dark:text-slate-500 font-sans mt-1.5;
+  }
+
+  /* ── Badge'y trybów Discovery ─────────────────────────────── */
+
+  .badge-mode-auto {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EDE9FE] text-[#8B5CF6] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-problem {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FFF7ED] text-[#F97316] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-solution {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F0FDFA] text-[#0D9488] text-xs font-semibold font-sans;
+  }
+
+  .badge-mode-simulate {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#EFF6FF] text-[#3B82F6] text-xs font-semibold font-sans;
+  }
+
+  /* ── Badge'y statusów ─────────────────────────────────────── */
+
+  .badge-status-running {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#DCFCE7] text-[#15803D] text-xs font-semibold font-sans;
+  }
+
+  .badge-status-completed {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F1F5F9] text-[#475569] text-xs font-semibold font-sans;
+  }
+
+  .badge-status-failed {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FEE2E2] text-[#DC2626] text-xs font-semibold font-sans;
+  }
+
+  .badge-status-queued {
+    @apply inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#FEF3C7] text-[#B45309] text-xs font-semibold font-sans;
+  }
+
+  /* ── Alerty ───────────────────────────────────────────────── */
+
+  .alert-error {
+    @apply rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 text-sm text-red-700 dark:text-red-400 font-sans flex items-center gap-2 p-3;
+  }
+
+  .alert-info {
+    @apply rounded-lg bg-slate-50 dark:bg-[#111111] border border-slate-200 dark:border-[#333333] text-xs text-slate-500 dark:text-slate-400 font-sans p-3;
+  }
+
+  .alert-success {
+    @apply rounded-[8px] border border-[#86EFAC] bg-[#DCFCE7] p-4;
+  }
+
+  /* ── Section header (Settings pattern) ────────────────────── */
+
+  .section-header {
+    @apply flex items-center gap-3 mb-5;
+  }
+
+  .section-header-icon {
+    @apply w-8 h-8 rounded-lg flex items-center justify-center;
+  }
+
+  .section-header-title {
+    @apply font-sans font-semibold text-[#0D2535] dark:text-slate-100;
+  }
+
+  /* ── Nav item ─────────────────────────────────────────────── */
+
+  .nav-item {
+    @apply flex items-center gap-4 px-4 py-3 rounded-lg text-sm font-sans transition-all duration-200;
+  }
+
+  .nav-item-active {
+    @apply text-white font-medium;
+    background: rgba(20, 184, 166, 0.2);
+    border-left: 3px solid #14B8A6;
+  }
+
+  .nav-item-inactive {
+    @apply font-normal hover:text-white;
+    color: #8BB5CC;
+    border-left: 3px solid transparent;
+    background: transparent;
+  }
+
+  .nav-item-inactive:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  /* ── Modal ────────────────────────────────────────────────── */
+
+  .modal-backdrop {
+    @apply fixed inset-0 z-50 flex items-center justify-center p-4;
+    background-color: rgba(13, 37, 53, 0.6);
+  }
+
+  .modal-container {
+    @apply bg-white dark:bg-[#1A1A1A] rounded-[12px] border border-[#E2E8F0] dark:border-[#333333] w-full max-w-md shadow-xl;
+  }
+
+  .modal-header {
+    @apply flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0] dark:border-[#333333];
+  }
+
+  .modal-title {
+    @apply font-mono font-bold text-[#0D2535] dark:text-slate-100;
+  }
+
+  .modal-body {
+    @apply p-6 space-y-4;
+  }
+
+  .modal-footer {
+    @apply flex gap-3 pt-4 justify-end border-t border-[#E2E8F0] dark:border-[#333333];
+  }
+}

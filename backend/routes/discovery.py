@@ -145,6 +145,8 @@ async def _run_discovery_task(
             "forces_report": result.forces_report,
             "assumption_map": result.assumption_map,
             "synthetic_archetypes": result.synthetic_archetypes,
+            "interview_insights": result.interview_insights,
+            "interview_notes": result.interview_notes,
             "jtbd": {
                 "functional_job": result.jtbd.functional_job,
                 "emotional_job": result.jtbd.emotional_job,
@@ -266,5 +268,7 @@ async def get_result(session_id: str):
         forces_report=data.get("forces_report", ""),
         assumption_map=data.get("assumption_map", ""),
         synthetic_archetypes=data.get("synthetic_archetypes", ""),
+        interview_insights=data.get("interview_insights", []),
+        interview_notes=data.get("interview_notes", ""),
         duration_hours=data.get("duration_hours", 0.0),
     )

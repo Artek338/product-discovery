@@ -1,0 +1,109 @@
+/**
+ * Product Builder — Design Tokens (CSS Custom Properties)
+ *
+ * Import this file in your project to get all design tokens as CSS variables.
+ * Usage:  @import './docs/style-guide/tokens.css';
+ *         or copy the :root block into your index.css.
+ */
+
+:root {
+  /* ── Brand Teal (Primary) ────────────────────────── */
+  --color-teal-100: #CCFBF1;
+  --color-teal-400: #2DD4BF;
+  --color-teal-500: #14B8A6;
+  --color-teal-600: #0D9488;
+
+  /* ── Neutrals / Dark ─────────────────────────────── */
+  --color-sidebar: #0D2535;
+  --color-dark-800: #1C2E40;
+  --color-dark-950: #0D1117;
+
+  /* ── Semantic ────────────────────────────────────── */
+  --color-success: #10B981;
+  --color-warning: #F59E0B;
+  --color-danger: #EF4444;
+  --color-info: #3B82F6;
+  --color-orange: #F97316;
+  --color-violet: #8B5CF6;
+
+  /* ── Surfaces ────────────────────────────────────── */
+  --color-surface: #F8FAFC;
+  --color-border: #E2E8F0;
+  --color-white: #FFFFFF;
+  --color-page-bg: #EFF2F7;
+
+  /* ── Verdict ─────────────────────────────────────── */
+  --color-verdict-go-bg: #DCFCE7;
+  --color-verdict-go-border: #86EFAC;
+  --color-verdict-go-text: #15803D;
+  --color-verdict-nogo-bg: #FEE2E2;
+  --color-verdict-nogo-border: #FCA5A5;
+  --color-verdict-nogo-text: #DC2626;
+  --color-verdict-needs-bg: #FEF3C7;
+  --color-verdict-needs-border: #FDE68A;
+  --color-verdict-needs-text: #B45309;
+
+  /* ── Charts ──────────────────────────────────────── */
+  --color-chart-completed: #14B8A6;
+  --color-chart-failed: #FF8A65;
+  --color-chart-queued: #FBBF24;
+  --color-chart-track: #F1F5F9;
+
+  /* ── Sidebar / Nav ───────────────────────────────── */
+  --color-nav-inactive: #8BB5CC;
+  --color-nav-section: #4A7090;
+  --color-nav-active-border: #14B8A6;
+  --color-nav-mobile-border: #1E3A5F;
+
+  /* ── Dark Mode Surfaces ──────────────────────────── */
+  --color-dark-body: #111111;
+  --color-dark-content: #141414;
+  --color-dark-card: #1A1A1A;
+  --color-dark-hover: #222222;
+  --color-dark-hover-strong: #2A2A2A;
+  --color-dark-border: #333333;
+
+  /* ── Typography ──────────────────────────────────── */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ── Font Sizes ──────────────────────────────────── */
+  --text-xs: 0.75rem;       /* 12px */
+  --text-sm: 0.875rem;      /* 14px */
+  --text-base: 1rem;        /* 16px */
+  --text-lg: 1.125rem;      /* 18px */
+  --text-xl: 1.25rem;       /* 20px */
+  --text-2xl: 1.5rem;       /* 24px */
+  --text-6xl: 3.75rem;      /* 60px */
+
+  /* ── Border Radius ───────────────────────────────── */
+  --radius-sm: 4px;
+  --radius-btn: 8px;
+  --radius-card: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* ── Spacing ─────────────────────────────────────── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* ── Shadows ─────────────────────────────────────── */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-chat: 0 2px 10px -4px rgba(0, 0, 0, 0.05);
+
+  /* ── Sidebar ─────────────────────────────────────── */
+  --sidebar-width: 256px;
+  --header-height: 80px;
+  --modal-backdrop: rgba(13, 37, 53, 0.6);
+
+  /* ── Transitions ─────────────────────────────────── */
+  --transition-colors: color 150ms, background-color 150ms, border-color 150ms;
+  --transition-all: all 200ms;
+}

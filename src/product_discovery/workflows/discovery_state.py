@@ -119,6 +119,8 @@ class DiscoveryResult:
     forces_report: str = ""
     assumption_map: str = ""
     synthetic_archetypes: str = ""
+    interview_insights: list[str] = field(default_factory=list)
+    interview_notes: str = ""
     output_path: Optional[str] = None
 
     @property

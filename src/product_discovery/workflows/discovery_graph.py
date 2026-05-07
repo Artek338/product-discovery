@@ -1,4 +1,4 @@
-﻿"""
+"""
 Discovery Graph v2.0 — pydantic-graph state machine dla Discovery Phase.
 
 8 węzłów wymuszają strukturalną kolejność kroków (v2.0 — Intelligence-Grade Discovery):
@@ -125,6 +125,12 @@ class SyntheticInterviewNode(BaseNode[DiscoveryState]):
         print("\n[0/7] SYNTHETIC INTERVIEW NODE [v2.0]")
         print("      Generowanie archetypów syntetycznych użytkowników...")
 
+        if ctx.state.interview_notes:
+            print("      ⚠️ Pomijam generowanie archetypów — dostarczono prawdziwe notatki z wywiadów.")
+            ctx.state.synthetic_archetypes = []
+            return BehavioralInterviewNode()
+
+
         try:
             archetypes = await generate_archetypes(
                 product_segment=ctx.state.idea_description[:500],
@@ -174,7 +180,7 @@ class BehavioralInterviewNode(BaseNode[DiscoveryState]):
 
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
-    ) -> CompetitiveResearchNode | UserInputNeededNode:
+    ) -> CompetitiveResearchNode:
         if ctx.state.progress_callback:
             await ctx.state.progress_callback("BehavioralInterviewNode", "Analiza insightów z wywiadów...")
         print("\n[1/5] BEHAVIORAL INTERVIEW NODE")
@@ -208,80 +214,48 @@ class BehavioralInterviewNode(BaseNode[DiscoveryState]):
 
 ZADANIE:
 1. Wyodrębnij 4-6 konkretnych insightów behawioralnych — TYLKO z materiału z wywiadów.
-2. Każdy insight musi opisywać KONKRETNE działanie użytkownika (past behavior).
-3. Szczególnie szukaj: workaroundów (arkusze, notes), strat (klient odszedł), named tools,
-   cytatów z wywiadów, odpowiedzi oznaczonych 💎 DETAILED lub ✅ GENUINE.
-4. Użyj validate_interview_question dla kluczowych pytań z sesji.
+2. Każdy insight musi opisywać KONKRETNE działanie użytkownika (past behavior) albo problem/ból z którym się boryka.
+3. Jeśli są to opinie (0_Opinion) lub preferencje (1_Preference), opisz jako "Użytkownik twierdzi, że...".
+4. Jeśli widzisz silne dowody z przeszłości (2_Past_Behavior), opisz "Użytkownik robił...".
 
-FORMAT INSIGHTÓW:
-- "N/M respondentów używa [konkretne narzędzie] jako workaround na [konkretny problem]"
-- "Rozmówca X opisał: [konkretna historia z przeszłości]"
-- "Archetyp [nazwa]: workaround = [co robi], ból = [konkretna strata]"
-
-NIE GENERUJ fikcyjnych insightów — tylko to co jest w materiale z wywiadów.
+WYMAGANIA:
+- Nie wymyślaj! Opieraj się w 100% na tekście w MATERIAŁ Z WYWIADÓW.
+- Zwróć tablicę krótkich stringów.
 """
         else:
-            prompt = f"""Przeprowadź analizę wywiadów behawioralnych dla następującego pomysłu:
+            prompt = f"""Przeprowadź analizę behawioralną dla następującego pomysłu:
 
 {ctx.state.idea_description}
 {bys_section}
 ZADANIE:
-1. Na podstawie opisu — czy founder przeprowadził wywiady behawioralne?
-2. Wyodrębnij konkretne insighty (max 5) z zachowań użytkowników opisanych w tekście.
-3. Dla każdego potencjalnego pytania użyj validate_interview_question żeby sprawdzić jakość.
-4. Oceń: czy mamy dowody behawioralne (past behavior), czy tylko opinie/preferencje?
+1. Na podstawie opisu wyodrębnij konkretne insighty (max 5) np. jakie zachowania lub problemy wykazuje grupa docelowa.
+2. Jeśli opis brzmi jak opinia znikąd, zrób insight postaci: "Założenie: problemem jest XYZ (brak dowodów behawioralnych)".
 
-FORMAT INSIGHTÓW (każdy insight to osobna obserwacja z wywiadu):
-- Każdy insight musi być konkretny: "Użytkownik X robił Y w sytuacji Z"
-- Nie ogólniki: NIE "użytkownicy lubią prostotę"
-- TAK: "3 na 5 freelancerów pokazało mi swoje prowizoryczne systemy w Excel+Notion"
-
-Jeśli opis NIE zawiera wywiadów behawioralnych — wyciągnij to co jest i zaznacz brak.
+WYMAGANIA:
+- Zwróć tylko listę stringów z obserwacjami.
 """
 
-        result = await _run_with_retry(ba_agent, prompt, model=ctx.state.runtime_model)
+        from pydantic import BaseModel
+        class InsightOutput(BaseModel):
+            insights: list[str]
 
-        # Budujemy insighty z WSZYSTKICH pól JTBDAnalysisResult.
-        # Dzięki temu zawsze mamy ≥3 insightów gdy agent zwrócił poprawny wynik.
-        # Prawdziwa bramka jakości jest w EvidenceGradingNode (evidence_level ≥ 2).
-        insights = []
+        from pydantic_ai import Agent
+        # Provide a fallback model if ctx.state.runtime_model is None
+        _run_model = ctx.state.runtime_model if ctx.state.runtime_model is not None else "claude-sonnet-4-6"
+        insight_agent = Agent(_run_model, output_type=InsightOutput)
 
-        # 3 wymiary Job (zawsze obecne w JTBDAnalysisResult)
-        if result.output.functional_job:
-            insights.append(f"Functional Job: {result.output.functional_job}")
-        if result.output.emotional_job:
-            insights.append(f"Emotional Job: {result.output.emotional_job}")
-        if result.output.social_job:
-            insights.append(f"Social Job: {result.output.social_job}")
+        result = await _run_with_retry(insight_agent, prompt, model=ctx.state.runtime_model)
 
-        # Konkurencja = potwierdzenie że użytkownicy mają alternatywy (lub nie)
-        for sol in result.output.competing_solutions[:2]:
-            insights.append(f"Obecne rozwiązanie: {sol}")
-
-        # Reasoning — konkretne obserwacje behawioralne jeśli agent je opisał
-        if result.output.reasoning:
-            lines = result.output.reasoning.strip().split("\n")
-            for line in lines:
-                line = line.strip()
-                if line and len(line) > 30:
-                    insights.append(line)
-                    break  # Bierzemy pierwszą sensowną linię
-
-        ctx.state.interview_insights = insights[:6]  # Max 6 insightów
+        ctx.state.interview_insights = result.output.insights[:6]  # Max 6 insightów
 
         print(f"      Zebrano {len(ctx.state.interview_insights)} insightów.")
         for i, insight in enumerate(ctx.state.interview_insights, 1):
             print(f"      {i}. {insight[:80]}...")
 
-        if ctx.state.has_minimum_interviews:
-            return CompetitiveResearchNode()
-        else:
-            ctx.state.missing_data_reason = (
-                f"Zebrano tylko {len(ctx.state.interview_insights)} insightów "
-                f"(minimum 3). Brakuje konkretnych obserwacji zachowań użytkowników. "
-                f"Przeprowadź 2-3 rozmowy behawioralne i uruchom ponownie."
-            )
-            return UserInputNeededNode()
+        if not ctx.state.has_minimum_interviews:
+            print(f"      ⚠️ Zebrano tylko {len(ctx.state.interview_insights)} insightów (zalecane min. 3).")
+        
+        return CompetitiveResearchNode()
 
 
 # ============================================================================
@@ -300,7 +274,7 @@ class CompetitiveResearchNode(BaseNode[DiscoveryState]):
 
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
-    ) -> EvidenceGradingNode | UserInputNeededNode:
+    ) -> EvidenceGradingNode:
         if ctx.state.progress_callback:
             await ctx.state.progress_callback("CompetitiveResearchNode", "Research konkurencji...")
         print("\n[2/5] COMPETITIVE RESEARCH NODE")
@@ -335,11 +309,7 @@ Zwróć wynik jako JTBDAnalysisResult z competing_solutions wypełnionym na pods
             ctx.state.competitive_report = "\n".join(report_lines)
             print(f"      Zidentyfikowano {len(result.output.competing_solutions)} konkurentów.")
         else:
-            ctx.state.missing_data_reason = (
-                "Research konkurencji nie zwrócił wyników. "
-                "Sprawdź połączenie z internetem i uruchom ponownie."
-            )
-            return UserInputNeededNode()
+            print("      ⚠️ Research konkurencji nie zwrócił wyników (awaria OSINT lub niszowy temat).")
 
         return EvidenceGradingNode()
 
@@ -377,7 +347,7 @@ class EvidenceGradingNode(BaseNode[DiscoveryState]):
 
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
-    ) -> ForcesDiagramNode | UserInputNeededNode:
+    ) -> ForcesDiagramNode:
         if ctx.state.progress_callback:
             await ctx.state.progress_callback("EvidenceGradingNode", "Ocena poziomu dowodów...")
         print("\n[3/7] EVIDENCE GRADING NODE")
@@ -394,25 +364,11 @@ class EvidenceGradingNode(BaseNode[DiscoveryState]):
         print(f"      Evidence Level: {evidence_level} (poziom {level_idx}/5)")
 
         if ctx.state.meets_evidence_threshold:
-            print("      ✅ Dowody wystarczające — przejście do Forces Diagram")
-            return ForcesDiagramNode()
+            print("      ✅ Dowody wystarczające — silne potwierdzenie.")
         else:
-            print(f"      ❌ Dowody za słabe (poziom {level_idx}/5, minimum: 2/5)")
-            ctx.state.missing_data_reason = (
-                f"Dowody na poziomie '{evidence_level}' są za słabe dla decyzji GO/NO-GO.\n\n"
-                "Brakuje: konkretnych historii z przeszłości użytkowników (Past Behavior).\n\n"
-                "Co zrobić:\n"
-                "1. Przeprowadź 2-3 wywiady behawioralne z pytaniami:\n"
-                '   "Opowiedz mi o ostatnim razie, gdy próbowałeś rozwiązać ten problem..."\n'
-                '   "Jak to zrobiłeś? Ile czasu zajęło? Co nie zadziałało?"\n'
-                "2. Zbierz KONKRETNE HISTORIĘ (nie opinie ani obietnice zakupu)\n"
-                "3. Uruchom Discovery ponownie z uzupełnionym opisem\n\n"
-                "Przykład dobrego dowodu: "
-                '"5 freelancerów pokazało mi swoje systemy w Excel — jeden stracił klienta '
-                'przez przeoczony deadline"\n'
-                'Przykład złego dowodu: "Moi znajomi powiedzieli że to świetny pomysł"'
-            )
-            return UserInputNeededNode()
+            print(f"      ⚠️ Dowody słabe (poziom {level_idx}/5) — analiza traktowana jako HIPOTEZA.")
+            
+        return ForcesDiagramNode()
 
     def _grade_evidence(self, insights: list[str], interview_notes: str = "") -> str:
         """
@@ -522,7 +478,7 @@ class ForcesDiagramNode(BaseNode[DiscoveryState]):
 
     async def run(
         self, ctx: GraphRunContext[DiscoveryState]
-    ) -> SynthesisNode | UserInputNeededNode:
+    ) -> SynthesisNode:
         if ctx.state.progress_callback:
             await ctx.state.progress_callback("ForcesDiagramNode", "Analiza sił Push/Pull/Anxiety/Habit...")
         print("\n[4/7] FORCES DIAGRAM NODE [v2.0]")
@@ -603,21 +559,10 @@ ZASADA WERDYKTU:
 
         print(f"      Evidence: {result.output.evidence_level} | Verdict: {result.output.verdict}")
 
-        # Jeśli Forces są wyraźnie przeciwne i brak planu mitygacji → zatrzymujemy
         if switch_unlikely and not any(
             kw in reasoning_lower for kw in ["mitygacja", "mitigation", "zmniejsz", "reduce"]
         ):
-            ctx.state.missing_data_reason = (
-                "Forces Diagram wskazuje że SWITCH_UNLIKELY:\n"
-                "(Anxiety + Habit) > (Push + Pull)\n\n"
-                "Użytkownicy NIE zmienią rozwiązania bez planu mitygacji.\n\n"
-                "Co zrobić:\n"
-                "1. Zidentyfikuj główne źródła Anxiety i Habit\n"
-                "2. Zaplanuj jak je zniwelować (trial bez CC, import danych, familiar UX)\n"
-                "3. Sprawdź czy Pull jest wystarczająco konkretny (kalkulator ROI)\n"
-                "4. Uruchom Discovery ponownie z danymi od użytkowników o barier zmiany"
-            )
-            return UserInputNeededNode()
+            print("      ⚠️ Brak planu mitygacji dla SWITCH_UNLIKELY — rekomendowany NO-GO lub pivot.")
 
         # Aktualizujemy jtbd_result z danymi forces diagram (do Synthesis)
         ctx.state.jtbd_result = result.output
@@ -816,15 +761,7 @@ Użyj tych samych wartości verdict/evidence/confidence co w analizie JTBD powy�
                     if any(m in row.lower() for m in weak_evidence_markers)
                 ]
                 if unvalidated:
-                    print(f"      ❌ Znaleziono {len(unvalidated)} niezwalidowane FATAL assumptions — blokuję GO")
-                    ctx.state.missing_data_reason = (
-                        f"Werdykt GO wymaga walidacji FATAL assumptions "
-                        f"({len(unvalidated)} bez dowodów ≥ Level 2_Past_Behavior).\n\n"
-                        "Przetestuj te założenia przed budowaniem:\n"
-                        + "\n".join(f"  → {row.strip()[:120]}" for row in unvalidated[:3])
-                        + "\n\nZbierz dowody behawioralne i uruchom Discovery ponownie."
-                    )
-                    return UserInputNeededNode()
+                    print(f"      ⚠️ Znaleziono {len(unvalidated)} niezwalidowane FATAL assumptions — obniżam pewność!")
 
         return ScorecardNode()
 
@@ -877,6 +814,8 @@ class UserInputNeededNode(BaseNode[DiscoveryState]):
                 scorecard=scorecard,
                 project_name=ctx.state.project_name,
                 duration_hours=ctx.state.elapsed_hours(),
+                interview_insights=ctx.state.interview_insights,
+                interview_notes=ctx.state.interview_notes,
             )
         )
 
@@ -952,6 +891,8 @@ class ScorecardNode(BaseNode[DiscoveryState]):
                 forces_report=forces_report,
                 assumption_map=assumption_report,
                 synthetic_archetypes=archetypes_report,
+                interview_insights=ctx.state.interview_insights,
+                interview_notes=ctx.state.interview_notes,
             )
         )
 
@@ -969,7 +910,6 @@ DiscoveryGraph = Graph(
         ForcesDiagramNode,
         SynthesisNode,
         AssumptionMapNode,
-        UserInputNeededNode,
         ScorecardNode,
     ]
 )

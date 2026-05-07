@@ -1,4 +1,4 @@
-﻿// TypeScript types odpowiadające Pydantic schemas z backendu
+// TypeScript types odpowiadające Pydantic schemas z backendu
 
 export type Verdict = 'GO' | 'NO-GO' | 'NEEDS_MORE_DATA'
 
@@ -67,6 +67,8 @@ export interface DiscoveryResult {
   forces_report: string
   assumption_map: string
   synthetic_archetypes: string
+  interview_insights?: string[]
+  interview_notes?: string
   duration_hours: number
 }
 
